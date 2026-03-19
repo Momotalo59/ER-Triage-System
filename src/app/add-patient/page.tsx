@@ -11,7 +11,8 @@ import {
   ClipboardList,
   Thermometer,
   Droplets,
-  HeartPulse
+  HeartPulse,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -340,6 +341,19 @@ export default function AddPatientPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="note" className="text-slate-600 font-medium flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" /> หมายเหตุ (Notes)
+                </Label>
+                <Textarea 
+                  id="note" 
+                  className="bg-slate-50 border-slate-200 text-slate-900 min-h-[80px]"
+                  placeholder="ข้อมูลเพิ่มเติมอื่นๆ..."
+                  value={formData.note} 
+                  onChange={e => setFormData(p => ({...p, note: e.target.value}))}
+                />
               </div>
             </section>
 
