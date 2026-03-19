@@ -71,6 +71,7 @@ export default function MCIListPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<{ id: string, title: string } | null>(null);
 
+  // Memoized stats calculation for performance
   const planStatsMap = useMemo(() => {
     const map: Record<string, { red: number; yellow: number; green: number; black: number; total: number }> = {};
     if (!allPatients) return map;
@@ -235,7 +236,7 @@ export default function MCIListPage() {
                           size="icon" 
                           className="h-12 w-12 border-slate-300 bg-slate-900 rounded-xl hover:bg-slate-800"
                         >
-                          <Link href={`/dashboard?id=${mci.id}`}>
+                          <Link href={`/dashboard?id=${mci.id}`} prefetch={true}>
                             <Edit className="h-6 w-6 text-white" />
                           </Link>
                         </Button>
@@ -251,7 +252,7 @@ export default function MCIListPage() {
                           asChild
                           className="bg-[#e63946] hover:bg-[#c62828] text-white gap-2 px-6 h-12 font-black rounded-xl shadow-lg shadow-red-100"
                         >
-                          <Link href={`/dashboard?id=${mci.id}`}>
+                          <Link href={`/dashboard?id=${mci.id}`} prefetch={true}>
                             <LayoutDashboard className="h-5 w-5" /> บอร์ดหลัก
                           </Link>
                         </Button>

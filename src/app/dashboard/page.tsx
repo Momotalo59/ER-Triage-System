@@ -19,7 +19,8 @@ import {
   XCircle,
   PlusCircle,
   Trash2,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -37,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, doc, where } from "firebase/firestore";
 
+// ส่วนประกอบนาฬิกาแยกอิสระเพื่อลด Re-render
 const RealTimeClock = React.memo(function RealTimeClock() {
   const [time, setTime] = useState("");
   useEffect(() => {
@@ -72,35 +74,18 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planId = searchParams.get('id');
+  const planId = searchParams.get('id') || "";
   const { toast } = useToast();
   const firestore = useFirestore();
   
+  // Memoize refs and queries for stability
   const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId, firestore]);
   const { data: planData } = useDoc<MCIPlan>(planDocRef);
 
-  const resourceDocRef = doc(firestore, 'resources', 'current');
+  const resourceDocRef = useMemoFirebase(() => doc(firestore, 'resources', 'current'), [firestore]);
   const { data: resources } = useDoc<ResourceSummary>(resourceDocRef);
 
-  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
-  const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
-  const [isVentEditOpen, setIsVentEditOpen] = useState(false);
-
-  const [tempPlan, setTempPlan] = useState({ title: '', location: '' });
-  const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
-  const [tempBlood, setTempBlood] = useState<any>({});
-
-  useEffect(() => {
-    if (planData && isPlanEditOpen) setTempPlan({ title: planData.title, location: planData.location });
-  }, [planData, isPlanEditOpen]);
-
-  useEffect(() => {
-    if (resources) {
-      if (isVentEditOpen) setTempVents(resources.ventilators || []);
-      if (isBloodEditOpen) setTempBlood(resources.bloodInventory || {});
-    }
-  }, [resources, isVentEditOpen, isBloodEditOpen]);
-
+  // Stats calculation
   const patientsRef = collection(firestore, 'patients');
   const memoizedQuery = useMemoFirebase(() => planId ? query(patientsRef, where('planId', '==', planId)) : query(patientsRef), [planId, firestore]);
   const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
@@ -109,6 +94,19 @@ function DashboardContent() {
     if (!patientsData) return [];
     return [...patientsData].sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }, [patientsData]);
+
+  // Dialog states
+  const [activeDialog, setActiveDialog] = useState<'plan' | 'blood' | 'vent' | null>(null);
+  const [tempPlan, setTempPlan] = useState({ title: '', location: '' });
+  const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
+  const [tempBlood, setTempBlood] = useState<any>({});
+
+  // Sync state when dialogs open
+  useEffect(() => {
+    if (activeDialog === 'plan' && planData) setTempPlan({ title: planData.title, location: planData.location });
+    if (activeDialog === 'blood' && resources) setTempBlood(resources.bloodInventory || {});
+    if (activeDialog === 'vent' && resources) setTempVents(resources.ventilators || []);
+  }, [activeDialog, planData, resources]);
 
   const handleDeletePatient = useCallback((id: string) => {
     if (confirm('ยืนยันการลบข้อมูลผู้ป่วย?')) {
@@ -119,14 +117,13 @@ function DashboardContent() {
 
   const handleUpdatePlan = () => {
     if (planId) updateDocumentNonBlocking(doc(firestore, 'mci_plans', planId), tempPlan);
-    setIsPlanEditOpen(false);
+    setActiveDialog(null);
     toast({ title: "บันทึกสำเร็จ", description: "อัปเดตข้อมูลเหตุการณ์แล้ว" });
   };
 
   const handleSaveResources = (updated: any) => {
     setDocumentNonBlocking(resourceDocRef, updated, { merge: true });
-    setIsBloodEditOpen(false);
-    setIsVentEditOpen(false);
+    setActiveDialog(null);
     toast({ title: "บันทึกสำเร็จ", description: "อัปเดตทรัพยากรเรียบร้อย" });
   };
 
@@ -153,11 +150,11 @@ function DashboardContent() {
                 <LayoutList className="h-3.5 w-3.5" /> รายการ MCI
               </Link>
             </Button>
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => setIsPlanEditOpen(true)}>
+            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => setActiveDialog('plan')}>
               <Edit className="h-3.5 w-3.5" /> แก้ไขชื่อแผน
             </Button>
             <Button asChild variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]">
-              <Link href={planId ? `/relative-board?id=${planId}` : '/relative-board'}>
+              <Link href={`/relative-board?id=${planId}`}>
                 <Monitor className="h-3.5 w-3.5" /> บอร์ดญาติ
               </Link>
             </Button>
@@ -166,10 +163,10 @@ function DashboardContent() {
                 <Plus className="h-3.5 w-3.5" /> เพิ่มผู้ป่วย
               </Link>
             </Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsBloodEditOpen(true)}>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setActiveDialog('blood')}>
               <Droplets className="h-3.5 w-3.5 text-red-600" /> หมู่เลือด
             </Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsVentEditOpen(true)}>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setActiveDialog('vent')}>
               <LungsImageIcon className="h-3.5 w-3.5" /> เครื่องช่วยหายใจ
             </Button>
             <Button asChild variant="destructive" size="sm" className="h-8 gap-1.5 text-[11px]">
@@ -189,23 +186,23 @@ function DashboardContent() {
           </div>
           <PatientTable patients={patients} onEdit={(p) => router.push(`/add-patient?id=${p.id}&planId=${planId}`)} onDelete={handleDeletePatient} />
         </section>
-        <ResourceWidgets patients={patients} onEditBlood={() => setIsBloodEditOpen(true)} onEditVent={() => setIsVentEditOpen(true)} />
+        <ResourceWidgets patients={patients} onEditBlood={() => setActiveDialog('blood')} onEditVent={() => setActiveDialog('vent')} />
       </main>
 
       {/* Edit Plan Dialog */}
-      <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
+      <Dialog open={activeDialog === 'plan'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold"><Edit className="h-5 w-5" /> แก้ไขเหตุการณ์</DialogTitle></DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid gap-2"><Label className="font-bold">ชื่อเหตุการณ์</Label><Input value={tempPlan.title} onChange={(e) => setTempPlan({...tempPlan, title: e.target.value})} /></div>
             <div className="grid gap-2"><Label className="font-bold">สถานที่</Label><Input value={tempPlan.location} onChange={(e) => setTempPlan({...tempPlan, location: e.target.value})} /></div>
           </div>
-          <DialogFooter><Button onClick={handleUpdatePlan} className="bg-[#b22222]">บันทึก</Button></DialogFooter>
+          <DialogFooter><Button onClick={handleUpdatePlan} className="bg-[#b22222] font-bold">บันทึก</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Blood Stock Dialog */}
-      <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
+      <Dialog open={activeDialog === 'blood'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold"><Droplets className="h-6 w-6" /> สต็อกหมู่เลือด</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-6 py-6">
@@ -221,7 +218,7 @@ function DashboardContent() {
       </Dialog>
 
       {/* Ventilator Dialog */}
-      <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
+      <Dialog open={activeDialog === 'vent'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold"><LungsImageIcon className="h-6 w-6" /> เครื่องช่วยหายใจ</DialogTitle></DialogHeader>
           <div className="space-y-6 py-4">
@@ -237,7 +234,7 @@ function DashboardContent() {
             ))}
             <Button variant="outline" className="w-full border-dashed h-12" onClick={() => setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }])}><PlusCircle className="h-4 w-4" /> เพิ่มแผนก</Button>
           </div>
-          <DialogFooter><Button onClick={() => handleSaveResources({ ventilators: tempVents })} className="bg-[#1a5f7a]">บันทึก</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => handleSaveResources({ ventilators: tempVents })} className="bg-[#1a5f7a] font-bold">บันทึก</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <Toaster />
