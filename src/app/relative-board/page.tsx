@@ -41,19 +41,12 @@ const MOCK_PATIENTS: Partial<Patient>[] = [
 export default function RelativeBoardPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [countdown, setCountdown] = useState(15);
 
-  // ระบบรีเฟรชหน้าจออัตโนมัติทุก 15 วินาที
+  // ระบบรีเฟรชหน้าจออัตโนมัติทุก 15 วินาที (ทำงานอยู่เบื้องหลัง)
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          router.refresh();
-          return 15;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      router.refresh();
+    }, 15000);
 
     return () => clearInterval(timer);
   }, [router]);
@@ -105,9 +98,6 @@ export default function RelativeBoardPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="text-[10px] bg-black/20 px-2 py-1 rounded-md shrink-0">
-              รีเฟรชใน {countdown} วินาที
-            </div>
           </div>
         </div>
       </header>
@@ -123,21 +113,21 @@ export default function RelativeBoardPage() {
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow className="h-12">
-                  <TableHead className="text-sm font-bold text-slate-600 px-6">#</TableHead>
-                  <TableHead className="text-sm font-bold text-slate-600">ชื่อ-นามสกุล</TableHead>
-                  <TableHead className="text-sm font-bold text-slate-600">สถานะปัจจุบัน</TableHead>
-                  <TableHead className="text-sm font-bold text-slate-600">จุดหมาย/หน่วยรับต่อ</TableHead>
-                  <TableHead className="text-sm font-bold text-slate-600">เวลาที่รับตัว</TableHead>
+                  <TableHead className="text-[12px] font-bold text-slate-600 px-6">#</TableHead>
+                  <TableHead className="text-[12px] font-bold text-slate-600">ชื่อ-นามสกุล</TableHead>
+                  <TableHead className="text-[12px] font-bold text-slate-600">สถานะปัจจุบัน</TableHead>
+                  <TableHead className="text-[12px] font-bold text-slate-600">จุดหมาย/หน่วยรับต่อ</TableHead>
+                  <TableHead className="text-[12px] font-bold text-slate-600">เวลาที่รับตัว</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPatients.length > 0 ? (
                   filteredPatients.map((patient, idx) => (
-                    <TableRow key={patient.id} className="h-14 hover:bg-slate-50 transition-colors">
-                      <TableCell className="px-6 text-base font-medium text-slate-400">{idx + 1}</TableCell>
-                      <TableCell className="text-lg font-bold text-slate-900">{patient.name}</TableCell>
+                    <TableRow key={patient.id} className="h-12 hover:bg-slate-50 transition-colors">
+                      <TableCell className="px-6 text-sm font-medium text-slate-400">{idx + 1}</TableCell>
+                      <TableCell className="text-base font-bold text-slate-900">{patient.name}</TableCell>
                       <TableCell>
-                        <Badge className={`text-xs px-3 py-0.5 rounded-full border-none font-bold ${
+                        <Badge className={`text-[10px] px-2 py-0.5 rounded-full border-none font-bold ${
                           patient.status === 'Admit' ? 'bg-orange-100 text-orange-700' :
                           patient.status === 'X-Ray' ? 'bg-blue-100 text-blue-700' :
                           'bg-slate-100 text-slate-700'
@@ -146,15 +136,15 @@ export default function RelativeBoardPage() {
                            patient.status === 'X-Ray' ? 'กำลังเอกซเรย์' : 'รอตรวจ'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-base text-slate-600 font-medium">
+                      <TableCell className="text-sm text-slate-600 font-medium">
                         <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-[#b22222]" />
+                          <MapPin className="h-3.5 w-3.5 text-[#b22222]" />
                           {patient.destination}
                         </div>
                       </TableCell>
-                      <TableCell className="text-base text-slate-500">
+                      <TableCell className="text-sm text-slate-500">
                         <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
+                          <Clock className="h-3.5 w-3.5" />
                           {patient.arrival} น.
                         </div>
                       </TableCell>
@@ -162,7 +152,7 @@ export default function RelativeBoardPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-40 text-center text-slate-400 text-base font-medium">
+                    <TableCell colSpan={5} className="h-40 text-center text-slate-400 text-sm font-medium">
                       ไม่พบรายชื่อผู้ป่วยที่ค้นหา
                     </TableCell>
                   </TableRow>
@@ -173,9 +163,9 @@ export default function RelativeBoardPage() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <InfoCard title="ติดต่อประชาสัมพันธ์" content="053-910-100 ต่อ 0" icon={<Phone className="h-5 w-5" />} />
-          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารหมอกัมพล/อาคารหมอบริกส์ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย" icon={<CreditCard className="h-5 w-5" />} />
-          <InfoCard title="สอบถามอาการเพิ่มเติม" content="กรุณาติดต่อเคาน์เตอร์พยาบาล" icon={<Info className="h-5 w-5" />} />
+          <InfoCard title="ติดต่อประชาสัมพันธ์" content="053-910-100 ต่อ 0" icon={<Phone className="h-4 w-4" />} />
+          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารหมอกัมพล/อาคารหมอบริกส์ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย" icon={<CreditCard className="h-4 w-4" />} />
+          <InfoCard title="สอบถามอาการเพิ่มเติม" content="กรุณาติดต่อเคาน์เตอร์พยาบาล" icon={<Info className="h-4 w-4" />} />
         </div>
       </main>
 
@@ -188,13 +178,13 @@ export default function RelativeBoardPage() {
 
 function InfoCard({ title, content, icon }: { title: string; content: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white p-4 rounded-xl shadow-md border border-slate-200 flex items-center gap-3 h-full">
-      <div className="h-10 w-10 bg-[#b22222]/10 rounded-full flex items-center justify-center text-[#b22222] shrink-0">
+    <div className="bg-white p-3 rounded-xl shadow-md border border-slate-200 flex items-center gap-3 h-full">
+      <div className="h-9 w-9 bg-[#b22222]/10 rounded-full flex items-center justify-center text-[#b22222] shrink-0">
         {icon}
       </div>
       <div>
-        <h3 className="font-bold text-sm text-slate-900">{title}</h3>
-        <p className="text-slate-500 text-xs leading-relaxed">{content}</p>
+        <h3 className="font-bold text-[13px] text-slate-900">{title}</h3>
+        <p className="text-slate-500 text-[11px] leading-tight">{content}</p>
       </div>
     </div>
   );
