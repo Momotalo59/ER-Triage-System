@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Patient, ResourceSummary, VentilatorDept } from "@/lib/types";
+import { Patient, ResourceSummary, VentilatorDept, TriageLevel, PatientStatus } from "@/lib/types";
 import { LayoutList, Activity, Droplets, Edit, Check, Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
@@ -53,8 +53,10 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
     }
   }, [resources]);
 
-  const getStatusCount = (s: string) => patients.filter(p => p.status === s).length;
-  const getTriageCount = (l: string) => patients.filter(p => p.triageLevel === l).length;
+  // ฟังก์ชันนับจำนวนตามสถานะจริง
+  const getStatusCount = (s: PatientStatus) => patients.filter(p => p.status === s).length;
+  // ฟังก์ชันนับจำนวนตามระดับการคัดกรองจริง (ใช้ edTriage)
+  const getEDTriageCount = (l: TriageLevel) => patients.filter(p => p.edTriage === l).length;
 
   const handleSaveResources = (updatedResources: Partial<ResourceSummary>) => {
     setDocumentNonBlocking(resourceDocRef, {
@@ -82,7 +84,7 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* 1. สถานะผู้ป่วย */}
+      {/* 1. สถานะผู้ป่วย - อัปเดตตามข้อมูลจริง */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#334155] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
           <LayoutList className="h-4 w-4 text-white" />
@@ -90,10 +92,10 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
         </CardHeader>
         <CardContent className="p-3 bg-white">
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-            <StatusRow label="กำลังตรวจรักษา" count={0} />
+            <StatusRow label="กำลังตรวจรักษา" count={getStatusCount('Waiting')} />
             <StatusRow label="X-Ray" count={getStatusCount('X-Ray')} />
             <StatusRow label="CT" count={getStatusCount('CT')} />
-            <StatusRow label="OR" count={0} />
+            <StatusRow label="OR" count={getStatusCount('OR')} />
             <StatusRow label="Admit" count={getStatusCount('Admit')} />
             <StatusRow label="D/C" count={getStatusCount('D/C')} />
             <StatusRow label="Refer" count={getStatusCount('Refer')} />
@@ -102,18 +104,18 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
         </CardContent>
       </Card>
 
-      {/* 2. ED Triage */}
+      {/* 2. ED Triage - อัปเดตตามข้อมูลจริง */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#8e24aa] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
           <Activity className="h-4 w-4 text-white" />
           <CardTitle className="text-sm font-bold text-white">ED Triage</CardTitle>
         </CardHeader>
         <CardContent className="p-3 bg-white space-y-1.5">
-          <TriageSmallRow color="bg-[#e63946]" label="แดง" count={getTriageCount('Critical')} />
-          <TriageSmallRow color="bg-[#d81b60]" label="ชมพู" count={0} />
-          <TriageSmallRow color="bg-[#ffb703]" label="เหลือง" count={0} />
-          <TriageSmallRow color="bg-[#2a9d8f]" label="เขียว" count={0} />
-          <TriageSmallRow color="bg-white border border-slate-200" label="ขาว" count={0} labelColor="text-slate-900" />
+          <TriageSmallRow color="bg-[#e63946]" label="แดง" count={getEDTriageCount('Critical')} />
+          <TriageSmallRow color="bg-[#d81b60]" label="ชมพู" count={getEDTriageCount('Urgent')} />
+          <TriageSmallRow color="bg-[#ffb703]" label="เหลือง" count={getEDTriageCount('Urgent')} />
+          <TriageSmallRow color="bg-[#2a9d8f]" label="เขียว" count={getEDTriageCount('Minor')} />
+          <TriageSmallRow color="bg-white border border-slate-200" label="ขาว" count={getEDTriageCount('Non-Urgent')} labelColor="text-slate-900" />
         </CardContent>
       </Card>
 
@@ -121,7 +123,9 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
       <Card id="blood-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#b22222] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <Droplets className="h-4 w-4 text-white" />
+            <div className="h-4 w-4 relative">
+               <Droplets className="h-4 w-4 text-white" />
+            </div>
             <CardTitle className="text-sm font-bold text-white">หมู่เลือด</CardTitle>
           </div>
           <button 
