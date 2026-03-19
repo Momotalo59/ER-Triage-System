@@ -18,7 +18,9 @@ import {
   Droplets,
   Wind,
   XCircle,
-  Check
+  Check,
+  AlertCircle,
+  History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,11 +53,18 @@ const MOCK_RESOURCES: ResourceSummary = {
   }
 };
 
+const MOCK_MCI_LIST = [
+  { id: '1', title: 'เพลิงไหม้โรงเรียนสตรีสิริเกศ', location: 'โรงเรียนสตรีสิริเกศ', status: 'Active', date: '11/03/2568', victims: 5 },
+  { id: '2', title: 'อุบัติเหตุรถบัสทัศนศึกษา', location: 'ทางหลวงหมายเลข 1', status: 'Closed', date: '05/03/2568', victims: 12 },
+  { id: '3', title: 'สารเคมีรั่วไหลนิคมอุตสาหกรรม', location: 'นิคมฯ บางปู', status: 'Closed', date: '01/03/2568', victims: 8 },
+];
+
 export default function CrisisTriageDashboard() {
   const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
+  const [isMciListOpen, setIsMciListOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   
   // Plan States
@@ -83,7 +93,6 @@ export default function CrisisTriageDashboard() {
     // Auto Refresh every 15 seconds
     const timer = setInterval(() => {
       updateTime();
-      // Simulate data refresh notification (Optional)
       console.log("Auto-refreshed at:", new Date().toLocaleTimeString());
     }, 15000); 
 
@@ -118,6 +127,16 @@ export default function CrisisTriageDashboard() {
     toast({
       title: "บันทึกสำเร็จ",
       description: "ข้อมูลเหตุการณ์ถูกอัปเดตแล้ว",
+    });
+  };
+
+  const handleSelectMci = (mciTitle: string, mciLocation: string) => {
+    setPlanName(mciTitle);
+    setPlanLocation(mciLocation);
+    setIsMciListOpen(false);
+    toast({
+      title: "สลับเหตุการณ์",
+      description: `กำลังแสดงข้อมูล: ${mciTitle}`,
     });
   };
 
@@ -156,7 +175,12 @@ export default function CrisisTriageDashboard() {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2"
+              onClick={() => setIsMciListOpen(true)}
+            >
               <LayoutList className="h-4 w-4" /> รายการ MCI
             </Button>
             <Button 
@@ -226,6 +250,51 @@ export default function CrisisTriageDashboard() {
         onSubmit={handleAddPatient}
         initialData={editingPatient}
       />
+
+      {/* MCI List Dialog */}
+      <Dialog open={isMciListOpen} onOpenChange={setIsMciListOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#b22222]">
+              <LayoutList className="h-5 w-5" /> รายการเหตุการณ์ MCI ทั้งหมด
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            {MOCK_MCI_LIST.map((mci) => (
+              <div 
+                key={mci.id} 
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                onClick={() => handleSelectMci(mci.title, mci.location)}
+              >
+                <div className="flex gap-3 items-center">
+                  <div className={`p-2 rounded-full ${mci.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'}`}>
+                    {mci.status === 'Active' ? <AlertCircle className="h-5 w-5" /> : <History className="h-5 w-5" />}
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-900">{mci.title}</div>
+                    <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {mci.location}</span>
+                      <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {mci.date}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Badge variant={mci.status === 'Active' ? "destructive" : "secondary"} className="mb-1">
+                    {mci.status === 'Active' ? 'กำลังดำเนินการ' : 'สิ้นสุดภารกิจ'}
+                  </Badge>
+                  <div className="text-[10px] text-slate-400">จำนวนผู้ป่วย: {mci.victims} ราย</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsMciListOpen(false)}>ปิดหน้าต่าง</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] gap-2">
+              <Plus className="h-4 w-4" /> สร้างเหตุการณ์ใหม่
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Plan Dialog */}
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
