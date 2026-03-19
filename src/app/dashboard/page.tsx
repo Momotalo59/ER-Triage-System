@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
-import { Patient, MCIPlan } from "@/lib/types";
+import { Patient, MCIPlan, ResourceSummary, VentilatorDept } from "@/lib/types";
 import { 
   Plus, 
   MapPin, 
@@ -17,6 +17,7 @@ import {
   Droplets,
   XCircle,
   Check,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,10 +32,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, doc, where } from "firebase/firestore";
 
-// แยก Component นาฬิกาเพื่อประสิทธิภาพ (ป้องกัน Re-render ทั้งหน้า Dashboard ทุกวินาที)
+const LungsImageIcon = ({ className }: { className?: string }) => (
+  <div className={`relative ${className} bg-white rounded-sm overflow-hidden flex items-center justify-center`}>
+    <Image 
+      src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp"
+      alt="Lungs Icon"
+      fill
+      sizes="20px"
+      className="object-contain"
+    />
+  </div>
+);
+
 function RealTimeClock() {
   const [time, setTime] = useState("");
   
@@ -64,13 +76,20 @@ export default function CrisisTriageDashboard() {
   const { toast } = useToast();
   const firestore = useFirestore();
   
-  // Fetch specific plan details
   const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId]);
   const { data: planData } = useDoc<MCIPlan>(planDocRef);
+
+  const resourceDocRef = doc(firestore, 'resources', 'current');
+  const { data: resources } = useDoc<ResourceSummary>(resourceDocRef);
 
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [tempPlanName, setTempPlanName] = useState("");
   const [tempPlanLocation, setTempPlanLocation] = useState("");
+
+  const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
+  const [isVentEditOpen, setIsVentEditOpen] = useState(false);
+  const [tempBlood, setTempBlood] = useState({ 'A': 0, 'B': 0, 'AB': 0, 'O': 0 });
+  const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
 
   useEffect(() => {
     if (planData) {
@@ -79,7 +98,13 @@ export default function CrisisTriageDashboard() {
     }
   }, [planData]);
 
-  // Fetch patients filtered by planId
+  useEffect(() => {
+    if (resources) {
+      setTempBlood(resources.bloodInventory || { 'A': 0, 'B': 0, 'AB': 0, 'O': 0 });
+      setTempVents(resources.ventilators || []);
+    }
+  }, [resources, isBloodEditOpen, isVentEditOpen]);
+
   const patientsRef = collection(firestore, 'patients');
   const memoizedQuery = useMemoFirebase(() => {
     if (planId) {
@@ -119,18 +144,29 @@ export default function CrisisTriageDashboard() {
     });
   };
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+  const handleSaveResources = (updatedResources: Partial<ResourceSummary>) => {
+    setDocumentNonBlocking(resourceDocRef, {
+      ...resources,
+      ...updatedResources
+    }, { merge: true });
+    setIsBloodEditOpen(false);
+    setIsVentEditOpen(false);
+    toast({
+      title: "บันทึกข้อมูลสำเร็จ",
+      description: "ข้อมูลทรัพยากรถูกอัปเดตเรียบร้อยแล้ว",
+    });
+  };
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+  const handleAddVentDept = () => {
+    setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }]);
+  };
+
+  const handleRemoveVentDept = (id: string) => {
+    setTempVents(tempVents.filter(d => d.id !== id));
+  };
+
+  const handleUpdateVentDept = (id: string, field: keyof VentilatorDept, value: string | number) => {
+    setTempVents(tempVents.map(d => d.id === id ? { ...d, [field]: value } : d));
   };
 
   return (
@@ -201,7 +237,7 @@ export default function CrisisTriageDashboard() {
               variant="secondary" 
               size="sm" 
               className="h-8 bg-white text-black hover:bg-slate-100 gap-2 text-xs"
-              onClick={() => scrollToSection('blood-section')}
+              onClick={() => setIsBloodEditOpen(true)}
             >
               <Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด
             </Button>
@@ -209,17 +245,9 @@ export default function CrisisTriageDashboard() {
               variant="secondary" 
               size="sm" 
               className="h-8 bg-white text-black hover:bg-slate-100 gap-2 text-xs"
-              onClick={() => scrollToSection('ventilator-section')}
+              onClick={() => setIsVentEditOpen(true)}
             >
-              <div className="relative h-4 w-4 overflow-hidden">
-                <Image 
-                  src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp" 
-                  alt="Ventilator" 
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              เครื่องช่วยหายใจ
+              <LungsImageIcon className="h-4 w-4" /> เครื่องช่วยหายใจ
             </Button>
             <Button variant="destructive" size="sm" className="h-8 gap-2 text-xs" onClick={() => router.push('/')}>
               <XCircle className="h-4 w-4" /> ปิดแผน
@@ -247,7 +275,11 @@ export default function CrisisTriageDashboard() {
           />
         </section>
 
-        <ResourceWidgets patients={patients} />
+        <ResourceWidgets 
+          patients={patients} 
+          onEditBlood={() => setIsBloodEditOpen(true)} 
+          onEditVent={() => setIsVentEditOpen(true)}
+        />
       </main>
 
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
@@ -281,6 +313,105 @@ export default function CrisisTriageDashboard() {
             <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
             <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2" onClick={handleUpdatePlan}>
               <Check className="h-4 w-4" /> บันทึกการเปลี่ยนแปลง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Blood Stock Dialog */}
+      <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold">
+              <Droplets className="h-6 w-6 text-[#b22222]" /> แก้ไขสต็อกหมู่เลือด
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-6 py-6">
+            {['A', 'B', 'AB', 'O'].map((type) => (
+              <div key={type} className="grid gap-2">
+                <Label htmlFor={`blood-${type}`} className="font-bold text-slate-700">หมู่เลือด {type}</Label>
+                <Input 
+                  id={`blood-${type}`}
+                  type="number"
+                  className="bg-slate-50 border-slate-200 text-slate-900"
+                  value={tempBlood[type as keyof typeof tempBlood]}
+                  onChange={(e) => setTempBlood(prev => ({
+                    ...prev,
+                    [type]: parseInt(e.target.value) || 0
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsBloodEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2 px-6" onClick={() => handleSaveResources({ bloodInventory: tempBlood })}>
+              <Check className="h-4 w-4" /> บันทึกข้อมูล
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ventilator Dialog */}
+      <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
+        <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold">
+              <LungsImageIcon className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {tempVents.map((dept, index) => (
+              <div key={dept.id} className="space-y-4 p-4 border border-slate-100 rounded-lg relative bg-slate-50/50">
+                <button 
+                  onClick={() => handleRemoveVentDept(dept.id)}
+                  className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <div className="grid gap-2">
+                  <Label className="font-bold text-xs text-slate-700">ชื่อแผนก/หน่วยงาน</Label>
+                  <Input 
+                    placeholder="เช่น ER, ICU, ศูนย์ฯ"
+                    className="bg-white border-slate-200 text-slate-900"
+                    value={dept.name}
+                    onChange={(e) => handleUpdateVentDept(dept.id, 'name', e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs text-slate-700">Vent (เครื่อง)</Label>
+                    <Input 
+                      type="number"
+                      className="bg-white border-slate-200 text-slate-900"
+                      value={dept.vent}
+                      onChange={(e) => handleUpdateVentDept(dept.id, 'vent', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs text-slate-700">Bird (เครื่อง)</Label>
+                    <Input 
+                      type="number"
+                      className="bg-white border-slate-200 text-slate-900"
+                      value={dept.bird}
+                      onChange={(e) => handleUpdateVentDept(dept.id, 'bird', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12 text-slate-500"
+              onClick={handleAddVentDept}
+            >
+              <Plus className="h-4 w-4" /> เพิ่มแผนกใหม่
+            </Button>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={() => handleSaveResources({ ventilators: tempVents })}>
+              <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
           </DialogFooter>
         </DialogContent>
