@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -154,7 +155,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardContent>
       </Card>
 
-      {/* Edit Blood Dialog */}
+      {/* Edit Blood Dialog - บังคับพื้นหลังขาว */}
       <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -188,7 +189,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </DialogContent>
       </Dialog>
 
-      {/* Edit Ventilator Dialog */}
+      {/* Edit Ventilator Dialog - บังคับพื้นหลังขาว */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>

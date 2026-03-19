@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -123,7 +124,7 @@ export default function CrisisTriageDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sarabun text-slate-900">
+    <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900">
       <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
@@ -236,6 +237,7 @@ export default function CrisisTriageDashboard() {
         <ResourceWidgets patients={patients} resources={resources} onUpdateResources={handleUpdateResources} />
       </main>
 
+      {/* บังคับพื้นหลังขาวสำหรับ Dialog แก้ไขชื่อแผน */}
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
