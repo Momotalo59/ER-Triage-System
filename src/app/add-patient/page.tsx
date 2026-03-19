@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
   Save, 
-  UserPlus, 
   Activity, 
   MapPin, 
   ClipboardList,
@@ -66,7 +65,7 @@ function AddPatientContent() {
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
-  // Sync planId from URL to formData immediately
+  // Sync planId from URL to formData and ensure it stays consistent
   useEffect(() => {
     if (planIdFromUrl) {
       setFormData(prev => ({ ...prev, planId: planIdFromUrl }));
@@ -94,7 +93,7 @@ function AddPatientContent() {
     }
   }, [existingPatient]);
 
-  const handleSubmit = useCallback((e?: React.FormEvent | React.MouseEvent) => {
+  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -124,13 +123,13 @@ function AddPatientContent() {
       });
     }
     
-    // Navigate back to the correct context after initiation
+    // IMPORTANT: Forced navigation back to dashboard to solve "stuck" issue
     if (currentPlanId) {
-      router.push(`/dashboard?id=${currentPlanId}`);
+      router.replace(`/dashboard?id=${currentPlanId}`);
     } else {
       router.back();
     }
-  }, [firestore, formData, patientId, planIdFromUrl, router, toast]);
+  };
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-10">
@@ -397,7 +396,8 @@ function AddPatientContent() {
 
             <div className="pt-8 flex gap-4">
               <Button 
-                type="submit" 
+                type="button" 
+                onClick={() => handleSubmit()}
                 className="flex-1 bg-[#b22222] hover:bg-[#8b1a1a] h-14 text-xl font-bold rounded-xl shadow-lg"
               >
                 {patientId ? 'ยืนยันการแก้ไข' : 'ยืนยันการลงทะเบียน'}
