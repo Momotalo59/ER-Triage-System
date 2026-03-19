@@ -28,8 +28,8 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
     <Image 
       src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp"
       alt="Lungs Icon"
-      width={20}
-      height={20}
+      fill
+      sizes="20px"
       className="object-contain"
     />
   </div>
