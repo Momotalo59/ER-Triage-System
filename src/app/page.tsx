@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -12,10 +12,20 @@ import {
   XCircle,
   AlertTriangle,
   Trash2,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -31,6 +41,11 @@ export default function MCIListPage() {
   const mciPlansRef = collection(firestore, 'mci_plans');
   const memoizedQuery = useMemoFirebase(() => query(mciPlansRef, orderBy('timestamp', 'desc')), []);
   const { data: mciPlans, isLoading } = useCollection<MCIPlan>(memoizedQuery);
+
+  // States for Create Dialog
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newPlanTitle, setNewPlanTitle] = useState("");
+  const [newPlanLocation, setNewPlanLocation] = useState("");
 
   const handleDeleteMCI = (id: string, title: string) => {
     if (confirm(`คุณต้องการลบแผน "${title}" ใช่หรือไม่? การลบนี้จะมีผลถาวรในฐานข้อมูล`)) {
@@ -53,21 +68,35 @@ export default function MCIListPage() {
     });
   };
 
-  const handleCreateNewPlan = () => {
+  const handleConfirmCreatePlan = () => {
+    if (!newPlanTitle || !newPlanLocation) {
+      toast({
+        variant: "destructive",
+        title: "ข้อมูลไม่ครบถ้วน",
+        description: "กรุณาระบุชื่อแผนและสถานที่เกิดเหตุ",
+      });
+      return;
+    }
+
+    const now = new Date();
     const newPlan = {
-      title: 'แผน MCI ใหม่',
-      location: 'ระบุสถานที่',
-      date: new Date().toLocaleDateString('th-TH'),
-      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      title: newPlanTitle,
+      location: newPlanLocation,
+      date: now.toLocaleDateString('th-TH'),
+      time: now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
       status: 'Open',
       stats: { red: 0, yellow: 0, green: 0, black: 0 },
-      timestamp: new Date().toISOString()
+      timestamp: now.toISOString()
     };
     
     addDocumentNonBlocking(mciPlansRef, newPlan);
+    setIsCreateDialogOpen(false);
+    setNewPlanTitle("");
+    setNewPlanLocation("");
+    
     toast({
       title: "สร้างแผนใหม่สำเร็จ",
-      description: "คุณสามารถเริ่มจัดการผู้ป่วยในแผนนี้ได้ทันที",
+      description: `แผน ${newPlanTitle} ถูกเพิ่มลงในฐานข้อมูลแล้ว`,
     });
   };
 
@@ -95,7 +124,7 @@ export default function MCIListPage() {
           </div>
           <Button 
             className="bg-white/10 hover:bg-white/20 border-2 border-white text-white rounded-full px-8 py-7 text-xl font-black gap-3 transition-all"
-            onClick={handleCreateNewPlan}
+            onClick={() => setIsCreateDialogOpen(true)}
           >
             <Plus className="h-7 w-7" /> เปิดแผน MCI ใหม่
           </Button>
@@ -112,7 +141,7 @@ export default function MCIListPage() {
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-slate-300">
             <AlertTriangle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-400 text-xl font-medium">ไม่พบรายการแผน MCI ในฐานข้อมูล</p>
-            <Button variant="link" onClick={handleCreateNewPlan} className="text-[#b22222] font-bold mt-2">
+            <Button variant="link" onClick={() => setIsCreateDialogOpen(true)} className="text-[#b22222] font-bold mt-2">
               สร้างแผนแรกของคุณที่นี่
             </Button>
           </div>
@@ -153,7 +182,12 @@ export default function MCIListPage() {
                       <span className="text-slate-900 font-black text-xl">รวม {(mci.stats?.red || 0) + (mci.stats?.yellow || 0) + (mci.stats?.green || 0) + (mci.stats?.black || 0)} ราย</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="icon" className="h-12 w-12 border-slate-300 bg-slate-900 rounded-xl hover:bg-slate-800">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-12 w-12 border-slate-300 bg-slate-900 rounded-xl hover:bg-slate-800"
+                        onClick={() => router.push(`/dashboard?id=${mci.id}`)}
+                      >
                         <Edit className="h-6 w-6 text-white" />
                       </Button>
                       <Button 
@@ -189,6 +223,45 @@ export default function MCIListPage() {
           </div>
         )}
       </main>
+
+      {/* Pop-up สำหรับสร้างแผนใหม่ */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold text-xl">
+              <Plus className="h-6 w-6 text-[#b22222]" /> เปิดแผน MCI ใหม่
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="newPlanTitle" className="font-bold text-slate-700">ชื่อเหตุการณ์ / แผน MCI</Label>
+              <Input 
+                id="newPlanTitle" 
+                placeholder="ระบุชื่อเหตุการณ์ เช่น เพลิงไหม้โรงเรียน..."
+                className="bg-slate-50 border-slate-200 text-slate-900 h-12"
+                value={newPlanTitle} 
+                onChange={(e) => setNewPlanTitle(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="newPlanLocation" className="font-bold text-slate-700">สถานที่เกิดเหตุ</Label>
+              <Input 
+                id="newPlanLocation" 
+                placeholder="ระบุสถานที่..."
+                className="bg-slate-50 border-slate-200 text-slate-900 h-12"
+                value={newPlanLocation} 
+                onChange={(e) => setNewPlanLocation(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-200 text-slate-600 h-12" onClick={() => setIsCreateDialogOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2 h-12 px-6" onClick={handleConfirmCreatePlan}>
+              <Check className="h-4 w-4" /> ยืนยันการเปิดแผน
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
