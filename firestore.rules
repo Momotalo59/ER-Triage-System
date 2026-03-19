@@ -4,41 +4,10 @@ service cloud.firestore {
 
     /**
      * สำหรับช่วง Prototype: อนุญาตให้ผู้ที่ล็อกอินแล้ว (รวมถึง Anonymous) 
-     * สามารถอ่านและเขียนข้อมูลในคอลเลกชันหลักได้ทั้งหมด
+     * สามารถอ่านและเขียนข้อมูลในทุกคอลเลกชันได้
      */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    // กฎสำหรับรายชื่อผู้ป่วย
-    match /patients/{patientId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // กฎสำหรับแผน MCI (ที่เพิ่มใหม่)
-    match /mci_plans/{planId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // กฎสำหรับข้อมูลทรัพยากร (หมู่เลือด, เครื่องช่วยหายใจ)
-    match /resources/{resourceId} {
-      allow read, write: if isSignedIn();
-    }
-
-    // กฎเดิมที่รองรับโครงสร้างแบบ DBAC
-    match /triage_statuses/{statusId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
-    }
-
-    match /medical_staff/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId);
-      allow write: if isSignedIn();
-    }
-
-    match /admins/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId);
-      allow write: if isSignedIn();
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
