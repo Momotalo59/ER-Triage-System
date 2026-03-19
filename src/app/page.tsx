@@ -17,10 +17,20 @@ import {
   Droplets,
   Wind,
   XCircle,
-  Printer
+  Printer,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const MOCK_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
@@ -43,7 +53,14 @@ const MOCK_RESOURCES: ResourceSummary = {
 export default function CrisisTriageDashboard() {
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  
+  // Plan States
+  const [planName, setPlanName] = useState("เพลิงไหม้โรงเรียนสตรีสิริเกศ");
+  const [planLocation, setPlanLocation] = useState("โรงเรียนสตรีสิริเกศ");
+  const [tempPlanName, setTempPlanName] = useState(planName);
+  const [tempPlanLocation, setTempPlanLocation] = useState(planLocation);
 
   const handleAddPatient = (data: Partial<Patient>) => {
     if (editingPatient) {
@@ -66,6 +83,12 @@ export default function CrisisTriageDashboard() {
     }
   };
 
+  const handleUpdatePlan = () => {
+    setPlanName(tempPlanName);
+    setPlanLocation(tempPlanLocation);
+    setIsPlanEditOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#f0f0f0] font-sarabun text-slate-900">
       {/* Red Header Bar */}
@@ -77,14 +100,14 @@ export default function CrisisTriageDashboard() {
             </div>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                เพลิงไหม้โรงเรียนสตรีสิริเกศ
+                {planName}
                 <span className="bg-emerald-500 text-[10px] px-1.5 rounded-full flex items-center gap-1">
                   <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" /> LIVE
                 </span>
               </h1>
               <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
                 <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> 18/03/2569 09:15</span>
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> โรงเรียนสตรีสิริเกศ</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {planLocation}</span>
                 <span className="flex items-center gap-1 text-yellow-300"><RefreshCw className="h-3 w-3" /> รีเฟรชใน 5 วิ</span>
               </div>
             </div>
@@ -94,7 +117,16 @@ export default function CrisisTriageDashboard() {
             <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
               <LayoutList className="h-4 w-4" /> รายการ MCI
             </Button>
-            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2"
+              onClick={() => {
+                setTempPlanName(planName);
+                setTempPlanLocation(planLocation);
+                setIsPlanEditOpen(true);
+              }}
+            >
               <Edit className="h-4 w-4" /> แก้ไขชื่อแผน
             </Button>
             <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
@@ -147,12 +179,51 @@ export default function CrisisTriageDashboard() {
         <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
       </main>
 
+      {/* Patient Registration Dialog */}
       <PatientFormDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
         onSubmit={handleAddPatient}
         initialData={editingPatient}
       />
+
+      {/* Edit Plan Dialog */}
+      <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" /> แก้ไขชื่อแผน / สถานที่
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="planName">ชื่อเหตุการณ์ / แผน MCI</Label>
+              <Input 
+                id="planName" 
+                value={tempPlanName} 
+                onChange={(e) => setTempPlanName(e.target.value)}
+                placeholder="เช่น เพลิงไหม้โรงเรียน..."
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="planLocation">สถานที่เกิดเหตุ</Label>
+              <Input 
+                id="planLocation" 
+                value={tempPlanLocation} 
+                onChange={(e) => setTempPlanLocation(e.target.value)}
+                placeholder="เช่น โรงเรียนสตรีสิริเกศ"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] gap-2" onClick={handleUpdatePlan}>
+              <Check className="h-4 w-4" /> บันทึกการเปลี่ยนแปลง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Toaster />
     </div>
   );
