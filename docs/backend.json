@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Patient",
       "type": "object",
-      "description": "Represents a patient admitted to the crisis triage system, including their medical status and personal details.",
+      "description": "Represents a patient in the emergency department, including their medical status, diagnosis, and current location. This entity supports real-time monitoring and data management.",
       "properties": {
         "id": {
           "type": "string",
@@ -12,11 +12,11 @@
         },
         "firstName": {
           "type": "string",
-          "description": "The first name of the patient."
+          "description": "The patient's given name."
         },
         "lastName": {
           "type": "string",
-          "description": "The last name of the patient."
+          "description": "The patient's family name."
         },
         "dateOfBirth": {
           "type": "string",
@@ -25,40 +25,50 @@
         },
         "gender": {
           "type": "string",
-          "description": "The gender of the patient (e.g., 'Male', 'Female', 'Other')."
+          "description": "The patient's biological sex or gender identity (e.g., Male, Female, Other)."
         },
         "admissionDateTime": {
           "type": "string",
-          "description": "The date and time when the patient was admitted to the facility.",
+          "description": "The timestamp when the patient was admitted to the emergency department.",
           "format": "date-time"
         },
-        "reportedSymptoms": {
-          "type": "string",
-          "description": "A free-text description of the initial symptoms reported by or for the patient upon admission."
+        "symptoms": {
+          "type": "array",
+          "description": "A list of initial symptoms reported by or observed in the patient, used for triage and AI suggestions.",
+          "items": {
+            "type": "string"
+          }
         },
-        "triageStatusId": {
+        "triageLevel": {
           "type": "string",
-          "description": "Reference to the TriageStatus indicating the patient's current criticality level. (Relationship: TriageStatus 1:N Patient)"
+          "description": "The assigned triage level for the patient (e.g., Critical, Urgent, Minor, Deceased). Used for dynamic status overviews."
         },
         "diagnosis": {
           "type": "string",
-          "description": "The current medical diagnosis or suspected condition for the patient."
+          "description": "The provisional or confirmed medical diagnosis for the patient."
         },
-        "currentMedicalStatus": {
+        "currentStatus": {
           "type": "string",
-          "description": "The current specific medical state or action for the patient (e.g., 'Waiting for X-Ray', 'Admitted to Ward', 'Discharged')."
+          "description": "The current procedural or administrative status of the patient (e.g., Waiting for X-Ray, In CT Scan, Admitted, Discharged, Deceased). Relevant for resource breakdown widgets."
         },
-        "currentDestination": {
+        "destination": {
           "type": "string",
-          "description": "The current physical location or department where the patient is assigned (e.g., 'Emergency Department', 'ICU', 'Operating Room')."
+          "description": "The patient's intended or actual destination after initial ED assessment (e.g., Ward A, ICU, Home, Morgue)."
         },
-        "bedNumber": {
+        "aiTriageSuggestion": {
           "type": "string",
-          "description": "The specific bed number assigned to the patient within their current destination, if applicable."
+          "description": "The AI-powered preliminary triage level suggestion based on reported symptoms, assisting medical staff."
+        },
+        "aiDiagnosticPathSuggestion": {
+          "type": "array",
+          "description": "A list of AI-powered suggested diagnostic paths or tests based on patient symptoms.",
+          "items": {
+            "type": "string"
+          }
         },
         "lastUpdatedDateTime": {
           "type": "string",
-          "description": "The date and time when the patient record was last updated.",
+          "description": "The timestamp when the patient record was last updated, supporting real-time monitoring.",
           "format": "date-time"
         }
       },
@@ -67,107 +77,47 @@
         "firstName",
         "lastName",
         "dateOfBirth",
-        "gender",
         "admissionDateTime",
-        "reportedSymptoms",
-        "triageStatusId",
-        "currentMedicalStatus",
-        "currentDestination",
-        "lastUpdatedDateTime"
+        "triageLevel",
+        "currentStatus"
       ]
     },
-    "TriageStatus": {
+    "BloodInventory": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "TriageStatus",
+      "title": "BloodInventory",
       "type": "object",
-      "description": "Defines the different levels of patient criticality used for triage in the system.",
+      "description": "Manages the stock levels of different blood types available in the facility, displayed in resource widgets.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the TriageStatus entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the triage status (e.g., 'Critical', 'Urgent', 'Minor', 'Deceased')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed description of the criteria associated with this triage status."
-        },
-        "severityLevel": {
-          "type": "number",
-          "description": "An integer representing the criticality level, where a lower number typically indicates higher severity (e.g., 1 for Critical, 4 for Minor)."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "severityLevel"
-      ]
-    },
-    "BloodProduct": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "BloodProduct",
-      "type": "object",
-      "description": "Represents an individual unit or batch of blood product available in the facility's inventory.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the BloodProduct entity."
+          "description": "Unique identifier for the BloodInventory entity."
         },
         "bloodType": {
           "type": "string",
-          "description": "The ABO blood group type of the blood product (e.g., 'A', 'B', 'AB', 'O')."
+          "description": "The type of blood (e.g., A+, O-, AB+)."
         },
-        "rhFactor": {
-          "type": "string",
-          "description": "The Rh factor of the blood product (e.g., '+' or '-')."
-        },
-        "unitIdentifier": {
-          "type": "string",
-          "description": "A unique identifier for this specific blood product unit (e.g., a donation ID or batch number)."
-        },
-        "volumeML": {
+        "quantityUnits": {
           "type": "number",
-          "description": "The volume of the blood product in milliliters."
+          "description": "The number of units of this blood type currently available."
         },
-        "collectionDateTime": {
+        "lastUpdatedDateTime": {
           "type": "string",
-          "description": "The date and time when the blood product was collected.",
+          "description": "The timestamp when the blood inventory record was last updated.",
           "format": "date-time"
-        },
-        "expirationDateTime": {
-          "type": "string",
-          "description": "The date and time when the blood product expires.",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string",
-          "description": "The current status of the blood product (e.g., 'Available', 'Reserved', 'Used', 'Expired', 'Discarded')."
-        },
-        "storageLocation": {
-          "type": "string",
-          "description": "The physical location within the facility where the blood product is stored (e.g., 'Blood Bank Freezer 1')."
         }
       },
       "required": [
         "id",
         "bloodType",
-        "rhFactor",
-        "unitIdentifier",
-        "volumeML",
-        "collectionDateTime",
-        "expirationDateTime",
-        "status",
-        "storageLocation"
+        "quantityUnits",
+        "lastUpdatedDateTime"
       ]
     },
     "Ventilator": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Ventilator",
       "type": "object",
-      "description": "Represents a medical ventilator device, its status, and current assignment to a patient.",
+      "description": "Manages the status and assignment of ventilators within the facility, tracked for usage widgets.",
       "properties": {
         "id": {
           "type": "string",
@@ -175,37 +125,31 @@
         },
         "serialNumber": {
           "type": "string",
-          "description": "The unique serial number identifying the specific ventilator device."
-        },
-        "model": {
-          "type": "string",
-          "description": "The make and model of the ventilator."
+          "description": "The manufacturer's unique serial number for the ventilator device."
         },
         "status": {
           "type": "string",
-          "description": "The current operational status of the ventilator (e.g., 'Available', 'In Use', 'Under Maintenance', 'Out of Service')."
+          "description": "The current operational status of the ventilator (e.g., Available, In Use, Under Maintenance)."
         },
-        "location": {
+        "patientId": {
           "type": "string",
-          "description": "The current physical location of the ventilator within the facility (e.g., 'ICU', 'ED', 'Storage Room')."
+          "description": "Reference to the Patient entity currently using this ventilator. Null if available. (Relationship: Ventilator 1:1 Patient)"
+        },
+        "assignedDateTime": {
+          "type": "string",
+          "description": "The timestamp when the ventilator was assigned to the current patient.",
+          "format": "date-time"
         },
         "lastMaintenanceDateTime": {
           "type": "string",
-          "description": "The date and time of the last maintenance performed on the ventilator.",
+          "description": "The timestamp of the last maintenance performed on the ventilator.",
           "format": "date-time"
-        },
-        "assignedPatientId": {
-          "type": "string",
-          "description": "Reference to the Patient currently utilizing this ventilator. This field is null if the ventilator is not in use. (Relationship: Patient 0..1:1 Ventilator)"
         }
       },
       "required": [
         "id",
         "serialNumber",
-        "model",
-        "status",
-        "location",
-        "lastMaintenanceDateTime"
+        "status"
       ]
     }
   },
@@ -224,27 +168,17 @@
           "schema": {
             "$ref": "#/backend/entities/Patient"
           },
-          "description": "A top-level collection storing individual patient records. Access to these records (create, read, update, delete) is restricted to users identified as authorized medical staff."
+          "description": "Stores individual patient records in the emergency department. All documents in this collection are accessible and editable by authenticated medical personnel. Includes critical medical status, diagnosis, and real-time updates."
         }
       },
       {
-        "path": "/triage_statuses/{triageStatusId}",
+        "path": "/blood_inventory/{bloodTypeId}",
         "definition": {
-          "entityName": "TriageStatus",
+          "entityName": "BloodInventory",
           "schema": {
-            "$ref": "#/backend/entities/TriageStatus"
+            "$ref": "#/backend/entities/BloodInventory"
           },
-          "description": "A top-level collection containing definitions of the various triage criticality levels. This is primarily a read-only reference data set for medical staff, with write access limited to administrators."
-        }
-      },
-      {
-        "path": "/blood_products/{bloodProductId}",
-        "definition": {
-          "entityName": "BloodProduct",
-          "schema": {
-            "$ref": "#/backend/entities/BloodProduct"
-          },
-          "description": "A top-level collection managing the inventory of blood products. Access is restricted to authorized medical staff who manage inventory."
+          "description": "Manages the stock levels for different blood types available. All documents are accessible and editable by authenticated medical personnel for resource management. The 'bloodTypeId' serves as the unique identifier for each blood type inventory record."
         }
       },
       {
@@ -254,30 +188,20 @@
           "schema": {
             "$ref": "#/backend/entities/Ventilator"
           },
-          "description": "A top-level collection tracking the status and assignment of medical ventilators. Access is restricted to authorized medical staff responsible for equipment management."
+          "description": "Tracks the status and assignment of individual ventilators. All documents are accessible and editable by authenticated medical personnel for resource monitoring. Each ventilator has a unique 'ventilatorId'."
         }
       },
       {
-        "path": "/medical_staff/{userId}",
+        "path": "/roles_medical_personnel/{userId}",
         "definition": {
-          "entityName": "User",
+          "entityName": "MedicalPersonnelRole",
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "A collection used for Database Access Control (DBAC). The existence of a document at this path for a given `userId` (corresponding to `request.auth.uid`) designates that user as an authorized medical staff member. This is used to grant general application access and read/write privileges to core data collections. (Assumes an implicit 'User' entity for schema reference)."
-        }
-      },
-      {
-        "path": "/admins/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "A collection used for Database Access Control (DBAC). The existence of a document at this path for a given `userId` designates that user as an administrator. Administrators have elevated privileges, typically including all medical staff privileges plus the ability to manage reference data (e.g., TriageStatus) and user roles. (Assumes an implicit 'User' entity for schema reference)."
+          "description": "Database Access Control (DBAC) collection. The existence of a document for a specific userId in this collection signifies that the user holds the 'medical personnel' role, granting them access to operational data. This is crucial for Authorization Independence and efficient QAPs."
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to be secure, scalable, and debuggable, adhering strictly to the provided core design principles and strategy mandates. It leverages top-level collections for each primary entity: 'Patient', 'TriageStatus', 'BloodProduct', and 'Ventilator'.\n\n**Authorization Independence (CRITICAL):** Authorization is achieved through a Database Access Control (DBAC) model based on explicit user roles stored in dedicated collections, not through hierarchical dependencies or `get()` calls in security rules. We introduce two global role collections: `/medical_staff/{userId}` and `/admins/{userId}`. The mere existence of a document at `medical_staff/$(request.auth.uid)` grants medical staff privileges, and similarly for `admins`. This completely decouples data access from specific document hierarchies within the main data collections, fulfilling the Authorization Independence mandate. For example, to access any patient data, the rule will only need to check the user's role document, like `exists(/databases/$(database)/documents/medical_staff/$(request.auth.uid))`, ensuring atomic operations and easy debugging.\n\n**QAPs (Rules are not Filters):** Each primary data collection (`/patients`, `/triage_statuses`, `/blood_products`, `/ventilators`) is designed with a homogeneous security posture. All documents within these collections share the same access requirements (e.g., all patient records are accessible to authorized medical staff). This structural segregation ensures that `list` operations can be performed securely and efficiently. Security rules will simply grant or deny access to the entire collection based on the user's role, without needing to filter documents within the rules themselves. This prevents costly and insecure full-collection scans during `list` operations. For instance, any authorized medical staff can list all patients, and the rules will enforce this by checking the user's role document, not by inspecting each patient document's content.\n\n**Data Relationships:** Relationships like `Patient` to `TriageStatus` (`triageStatusId`) and `Ventilator` to `Patient` (`assignedPatientId`) are implemented via direct document references (IDs), not nested subcollections. This maintains flexibility and avoids unnecessary deep hierarchies that can complicate queries and security rules.\n\n**DBAC Implementation:** By using `/medical_staff/{userId}` and `/admins/{userId}` based on 'Existence over Content', role assignment and checking become extremely simple and efficient for security rules. This strategy completely avoids custom claims and hard-to-manage rule logic.\n\nRegarding the user's specific request: \"เมื่อกดปุ่ม เพิ่มผู้ป่วยใหม่ ต้องสร้างหน้าใหม่ไม่ใช่แสดงเป็น Popup ออกมาและ ไม่ต้องมี AI แนะนำระดับการคัดกรอง\" - The proposed data structure fully supports adding new patient records via the `/patients/{patientId}` collection. The UI/UX preference for a new page over a popup and the decision to exclude AI triage suggestions do not impact the database schema itself, but the `Patient` entity's `triageStatusId` can be manually updated as required.\n\nFinally, the proposed structure is compatible with the 'er-triage-system' Project ID as Firestore configurations are per-project and independent of the data structure design."
+    "reasoning": "The recommended Firestore structure for the Crisis Triage Dashboard prioritizes security, scalability, and debuggability by adhering to the core design principles, especially Authorization Independence and QAPs.The design establishes three primary top-level collections for the application's core entities: `/patients`, `/blood_inventory`, and `/ventilators`. Each collection is designed to hold documents of a single entity type, ensuring structural segregation and a homogeneous security posture.All operational data (patients, blood inventory, ventilators) is intended to be accessible and manageable by 'medical personnel'. Authorization Independence is achieved by making access decisions for any document in these collections reliant solely on the requesting user's global role. This means that security rules will not involve `get()` calls to parent documents or other collections to determine access rights for individual documents within these core collections. Instead, a Database Access Control (DBAC) approach is used: a dedicated collection, `/roles_medical_personnel/{userId}`, will store records indicating which users possess the 'medical personnel' role. The existence of a document for `request.auth.uid` in this collection will grant the necessary read/write permissions.This design directly supports QAPs (Rules are not Filters). Since all documents within `/patients`, `/blood_inventory`, and `/ventilators` are uniformly accessible to `medical_personnel`, any `list` query performed by an authorized user will return all documents matching the query criteria without implicit filtering by security rules. This makes querying predictable and efficient. The structure ensures clarity through semantic naming, explicit state modeling (e.g., `currentStatus`, `triageLevel`), and predictable schemas, facilitating robust security rules that are easy to understand and debug. The Project ID 'er-triage-system' can certainly be used with this proposed Firestore structure."
   }
 }
