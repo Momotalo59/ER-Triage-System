@@ -20,7 +20,8 @@ import {
   XCircle,
   Check,
   AlertCircle,
-  History
+  History,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const MOCK_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
@@ -93,7 +95,6 @@ export default function CrisisTriageDashboard() {
     // Auto Refresh every 15 seconds
     const timer = setInterval(() => {
       updateTime();
-      console.log("Auto-refreshed at:", new Date().toLocaleTimeString());
     }, 15000); 
 
     return () => clearInterval(timer);
@@ -141,9 +142,9 @@ export default function CrisisTriageDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f0f0] font-sarabun text-slate-900">
+    <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
       {/* Red Header Bar */}
-      <header className="bg-[#b22222] text-white p-4 shadow-md">
+      <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="bg-white p-1 rounded-md w-14 h-14 flex items-center justify-center overflow-hidden shadow-sm">
@@ -251,48 +252,71 @@ export default function CrisisTriageDashboard() {
         initialData={editingPatient}
       />
 
-      {/* MCI List Dialog */}
+      {/* MCI List Dialog (FULL SCREEN DARK OVERLAY STYLE) */}
       <Dialog open={isMciListOpen} onOpenChange={setIsMciListOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#b22222]">
-              <LayoutList className="h-5 w-5" /> รายการเหตุการณ์ MCI ทั้งหมด
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            {MOCK_MCI_LIST.map((mci) => (
-              <div 
-                key={mci.id} 
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
-                onClick={() => handleSelectMci(mci.title, mci.location)}
-              >
-                <div className="flex gap-3 items-center">
-                  <div className={`p-2 rounded-full ${mci.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-400'}`}>
-                    {mci.status === 'Active' ? <AlertCircle className="h-5 w-5" /> : <History className="h-5 w-5" />}
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-900">{mci.title}</div>
-                    <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
-                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {mci.location}</span>
-                      <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {mci.date}</span>
+        <DialogContent className="sm:max-w-[800px] bg-[#1a1a1a] border-slate-800 text-white p-0 overflow-hidden">
+          <div className="p-8">
+            <DialogHeader className="mb-8">
+              <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+                <LayoutList className="h-8 w-8 text-[#e63946]" /> 
+                <span className="text-[#e63946]">รายการเหตุการณ์ MCI ทั้งหมด</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {MOCK_MCI_LIST.map((mci) => (
+                <div 
+                  key={mci.id} 
+                  className={cn(
+                    "flex items-center justify-between p-5 border-2 rounded-2xl cursor-pointer transition-all hover:bg-white/5",
+                    mci.status === 'Active' ? "border-[#e63946]/50 bg-[#e63946]/5" : "border-white/20"
+                  )}
+                  onClick={() => handleSelectMci(mci.title, mci.location)}
+                >
+                  <div className="flex gap-4 items-center">
+                    <div className={cn(
+                      "p-3 rounded-full",
+                      mci.status === 'Active' ? "bg-[#e63946]/20 text-[#e63946]" : "bg-white/10 text-white/40"
+                    )}>
+                      {mci.status === 'Active' ? <AlertCircle className="h-7 w-7" /> : <History className="h-7 w-7" />}
+                    </div>
+                    <div>
+                      <div className={cn(
+                        "text-xl font-bold",
+                        mci.status === 'Active' ? "text-white" : "text-white/60"
+                      )}>{mci.title}</div>
+                      <div className="text-sm text-white/40 flex items-center gap-4 mt-1.5">
+                        <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {mci.location}</span>
+                        <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {mci.date}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="text-right">
+                    <Badge className={cn(
+                      "mb-2 text-sm px-4 py-1 font-bold rounded-full",
+                      mci.status === 'Active' ? "bg-[#e63946] text-white hover:bg-[#e63946]" : "bg-white text-black hover:bg-white"
+                    )}>
+                      {mci.status === 'Active' ? 'กำลังดำเนินการ' : 'สิ้นสุดภารกิจ'}
+                    </Badge>
+                    <div className="text-sm text-white/40">จำนวนผู้ป่วย: {mci.victims} ราย</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant={mci.status === 'Active' ? "destructive" : "secondary"} className="mb-1">
-                    {mci.status === 'Active' ? 'กำลังดำเนินการ' : 'สิ้นสุดภารกิจ'}
-                  </Badge>
-                  <div className="text-[10px] text-slate-400">จำนวนผู้ป่วย: {mci.victims} ราย</div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsMciListOpen(false)}>ปิดหน้าต่าง</Button>
-            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] gap-2">
-              <Plus className="h-4 w-4" /> สร้างเหตุการณ์ใหม่
+          
+          <div className="bg-black/40 p-6 flex justify-end items-center gap-4">
+            <Button 
+              variant="ghost" 
+              className="text-white hover:bg-white/10 text-lg font-bold"
+              onClick={() => setIsMciListOpen(false)}
+            >
+              ปิดหน้าต่าง
             </Button>
-          </DialogFooter>
+            <Button className="bg-[#e63946] hover:bg-[#c62828] text-white gap-2 h-12 px-6 rounded-xl text-lg font-bold">
+              <Plus className="h-5 w-5" /> สร้างเหตุการณ์ใหม่
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
