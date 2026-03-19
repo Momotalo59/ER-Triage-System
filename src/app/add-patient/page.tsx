@@ -57,7 +57,7 @@ export default function AddPatientPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] font-sarabun text-white pb-10">
+    <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-10">
       {/* Header ตามรูปแบบที่กำหนด */}
       <header className="bg-[#b22222] text-white p-3 shadow-md sticky top-0 z-40">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center">
@@ -93,19 +93,19 @@ export default function AddPatientPage() {
       </header>
 
       <main className="max-w-[1200px] mx-auto p-6 mt-4">
-        <div className="bg-[#262626] rounded-3xl p-8 shadow-2xl border border-white/5">
+        <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
           <form onSubmit={handleSubmit} className="space-y-10">
             {/* Section 1: ข้อมูลพื้นฐาน */}
             <section className="space-y-6">
-              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg">
+              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg border-b pb-2">
                 <ClipboardList className="h-5 w-5" /> ข้อมูลพื้นฐานและอาการ
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="name" className="text-slate-300">ชื่อ-นามสกุล (หรือสัญลักษณ์ระบุตัวตน)</Label>
+                  <Label htmlFor="name" className="text-slate-600">ชื่อ-นามสกุล (หรือสัญลักษณ์ระบุตัวตน)</Label>
                   <Input 
                     id="name" 
-                    className="bg-[#333] border-white/10 text-white h-12"
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="ระบุชื่อหรือรหัสผู้ป่วย"
                     value={formData.name} 
                     onChange={e => setFormData(p => ({...p, name: e.target.value}))} 
@@ -113,10 +113,10 @@ export default function AddPatientPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="hn" className="text-slate-300">เลข HN (ถ้ามี)</Label>
+                  <Label htmlFor="hn" className="text-slate-600">เลข HN (ถ้ามี)</Label>
                   <Input 
                     id="hn" 
-                    className="bg-[#333] border-white/10 text-white h-12"
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="Hospital Number"
                     value={formData.hn} 
                     onChange={e => setFormData(p => ({...p, hn: e.target.value}))} 
@@ -124,22 +124,22 @@ export default function AddPatientPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="age" className="text-slate-300">อายุ</Label>
+                    <Label htmlFor="age" className="text-slate-600">อายุ</Label>
                     <Input 
                       id="age" 
                       type="number" 
-                      className="bg-[#333] border-white/10 text-white h-12"
+                      className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                       value={formData.age} 
                       onChange={e => setFormData(p => ({...p, age: parseInt(e.target.value)}))} 
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gender" className="text-slate-300">เพศ</Label>
+                    <Label htmlFor="gender" className="text-slate-600">เพศ</Label>
                     <Select value={formData.gender} onValueChange={v => setFormData(p => ({...p, gender: v}))}>
-                      <SelectTrigger className="bg-[#333] border-white/10 text-white h-12">
+                      <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#333] text-white border-white/10">
+                      <SelectContent>
                         <SelectItem value="ชาย">ชาย</SelectItem>
                         <SelectItem value="หญิง">หญิง</SelectItem>
                         <SelectItem value="อื่นๆ">อื่นๆ</SelectItem>
@@ -150,10 +150,10 @@ export default function AddPatientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="symptoms" className="text-slate-300">อาการสำคัญ (Chief Complaint)</Label>
+                <Label htmlFor="symptoms" className="text-slate-600">อาการสำคัญ (Chief Complaint)</Label>
                 <Textarea 
                   id="symptoms" 
-                  className="bg-[#333] border-white/10 text-white min-h-[120px] text-lg"
+                  className="bg-slate-50 border-slate-200 text-slate-900 min-h-[120px] text-lg"
                   placeholder="ระบุอาการแรกรับของผู้ป่วย..."
                   value={formData.symptoms} 
                   onChange={e => setFormData(p => ({...p, symptoms: e.target.value}))}
@@ -163,12 +163,12 @@ export default function AddPatientPage() {
 
             {/* Section 2: การคัดกรองและสถานะ */}
             <section className="space-y-6">
-              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg">
+              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg border-b pb-2">
                 <Activity className="h-5 w-5" /> การคัดกรองและแผนการรักษา
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="triage" className="text-slate-300">ระดับความรุนแรง (Triage Level)</Label>
+                  <Label htmlFor="triage" className="text-slate-600">ระดับความรุนแรง (Triage Level)</Label>
                   <Select value={formData.triageLevel} onValueChange={v => setFormData(p => ({...p, triageLevel: v as TriageLevel}))}>
                     <SelectTrigger className={`border-none font-bold h-12 ${
                       formData.triageLevel === 'Critical' ? 'bg-[#e63946] text-white' :
@@ -177,7 +177,7 @@ export default function AddPatientPage() {
                     }`}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#333] text-white border-white/10">
+                    <SelectContent>
                       <SelectItem value="Critical">วิกฤต (แดง)</SelectItem>
                       <SelectItem value="Urgent">เร่งด่วน (เหลือง)</SelectItem>
                       <SelectItem value="Minor">ไม่รุนแรง (เขียว)</SelectItem>
@@ -186,12 +186,12 @@ export default function AddPatientPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status" className="text-slate-300">สถานะปัจจุบัน</Label>
+                  <Label htmlFor="status" className="text-slate-600">สถานะปัจจุบัน</Label>
                   <Select value={formData.status} onValueChange={v => setFormData(p => ({...p, status: v as PatientStatus}))}>
-                    <SelectTrigger className="bg-[#333] border-white/10 text-white h-12">
+                    <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#333] text-white border-white/10">
+                    <SelectContent>
                       <SelectItem value="Waiting">รอตรวจ</SelectItem>
                       <SelectItem value="X-Ray">เอกซเรย์</SelectItem>
                       <SelectItem value="Lab">ส่งแล็บ</SelectItem>
@@ -201,10 +201,10 @@ export default function AddPatientPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="scene" className="text-slate-300">จุดเกิดเหตุ / รถนำส่ง</Label>
+                  <Label htmlFor="scene" className="text-slate-600">จุดเกิดเหตุ / รถนำส่ง</Label>
                   <Input 
                     id="scene" 
-                    className="bg-[#333] border-white/10 text-white h-12"
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="เช่น แดง 1, กู้ชีพ..."
                     value={formData.scene} 
                     onChange={e => setFormData(p => ({...p, scene: e.target.value}))} 
@@ -214,23 +214,23 @@ export default function AddPatientPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="diagnosis" className="text-slate-300">การวินิจฉัยเบื้องต้น (Initial Diagnosis)</Label>
+                  <Label htmlFor="diagnosis" className="text-slate-600">การวินิจฉัยเบื้องต้น (Initial Diagnosis)</Label>
                   <Input 
                     id="diagnosis" 
-                    className="bg-[#333] border-white/10 text-white h-12"
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     value={formData.diagnosis} 
                     onChange={e => setFormData(p => ({...p, diagnosis: e.target.value}))} 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="destination" className="text-slate-300">จุดหมาย/หน่วยรับต่อ (Destination)</Label>
+                  <Label htmlFor="destination" className="text-slate-600">จุดหมาย/หน่วยรับต่อ (Destination)</Label>
                   <div className="flex gap-2">
-                    <div className="flex items-center justify-center h-12 w-12 bg-[#333] rounded-lg border border-white/10">
-                      <MapPin className="h-5 w-5 text-slate-400" />
+                    <div className="flex items-center justify-center h-12 w-12 bg-slate-100 rounded-lg border border-slate-200 text-slate-400">
+                      <MapPin className="h-5 w-5" />
                     </div>
                     <Input 
                       id="destination" 
-                      className="bg-[#333] border-white/10 text-white h-12 flex-1"
+                      className="bg-slate-50 border-slate-200 text-slate-900 h-12 flex-1"
                       value={formData.destination} 
                       onChange={e => setFormData(p => ({...p, destination: e.target.value}))} 
                     />
@@ -249,7 +249,7 @@ export default function AddPatientPage() {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="px-10 h-14 border-white/10 bg-[#333] text-white hover:bg-[#444] rounded-xl text-lg"
+                className="px-10 h-14 border-slate-200 bg-white text-slate-600 hover:bg-slate-50 rounded-xl text-lg"
                 onClick={() => router.back()}
               >
                 ยกเลิก
