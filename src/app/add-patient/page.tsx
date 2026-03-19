@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -13,7 +13,8 @@ import {
   Thermometer,
   Droplets,
   HeartPulse,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,11 +33,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
-export default function AddPatientPage() {
+function AddPatientContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get('id');
-  const planId = searchParams.get('planId');
+  const planIdFromUrl = searchParams.get('planId');
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -59,6 +60,7 @@ export default function AddPatientPage() {
     disp: '-',
     blood: 'O',
     note: '',
+    planId: planIdFromUrl || "",
   });
 
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
@@ -84,14 +86,16 @@ export default function AddPatientPage() {
     }
   }, [existingPatient]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault();
     
     const patientsRef = collection(firestore, 'patients');
+    const finalPlanId = planIdFromUrl || formData.planId || "";
+    
     const dataToSave = {
       ...formData,
-      planId: planId || formData.planId || "",
-      timestamp: new Date().toISOString(),
+      planId: finalPlanId,
+      timestamp: formData.timestamp || new Date().toISOString(),
       edTriage: formData.triageLevel,
     };
 
@@ -109,7 +113,8 @@ export default function AddPatientPage() {
       });
     }
     
-    router.push(`/dashboard?id=${planId || formData.planId}`);
+    // นำทางกลับไปยัง Dashboard พร้อมส่ง planId กลับไปด้วยเพื่อให้แสดงผลได้ถูกต้อง
+    router.push(`/dashboard?id=${finalPlanId}`);
   };
 
   return (
@@ -392,5 +397,17 @@ export default function AddPatientPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AddPatientPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center font-sarabun">
+        <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
+      </div>
+    }>
+      <AddPatientContent />
+    </Suspense>
   );
 }
