@@ -100,7 +100,6 @@ export default function CrisisTriageDashboard() {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Add a brief highlight effect
       element.classList.add('ring-4', 'ring-[#b22222]/20');
       setTimeout(() => {
         element.classList.remove('ring-4', 'ring-[#b22222]/20');
@@ -162,7 +161,12 @@ export default function CrisisTriageDashboard() {
             >
               <Edit className="h-4 w-4" /> แก้ไขชื่อแผน
             </Button>
-            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2"
+              onClick={() => router.push('/relative-board')}
+            >
               <Monitor className="h-4 w-4" /> บอร์ดญาติ
             </Button>
             <Button 
@@ -178,7 +182,7 @@ export default function CrisisTriageDashboard() {
               className="h-8 bg-white text-black hover:bg-slate-100 gap-2"
               onClick={() => scrollToSection('blood-section')}
             >
-              <Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด
+              <体积 className="h-4 w-4 text-red-600" /> หมู่เลือด
             </Button>
             <Button 
               variant="secondary" 
