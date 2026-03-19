@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface ResourceWidgetsProps {
   patients: Patient[];
@@ -22,20 +23,17 @@ interface ResourceWidgetsProps {
   onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
-// ไอคอนเครื่องช่วยหายใจแบบที่ 3 (สไตล์มินิมอลตามรูป)
-const LungsIcon = ({ className }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M12 3v13M12 16a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-3c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v3" />
-    <path d="M12 16a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-3c0-1.1-.9-2-2-2h-1c-1.1 0-2 .9-2 2v3" />
-  </svg>
+// ไอคอนเครื่องช่วยหายใจที่ใช้รูปภาพจาก URL ที่ผู้ใช้กำหนด
+const LungsImageIcon = ({ className }: { className?: string }) => (
+  <div className={`relative ${className} bg-white rounded-sm overflow-hidden flex items-center justify-center`}>
+    <Image 
+      src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp"
+      alt="Lungs Icon"
+      width={20}
+      height={20}
+      className="object-contain"
+    />
+  </div>
 );
 
 export function ResourceWidgets({ patients, resources, onUpdateResources }: ResourceWidgetsProps) {
@@ -147,7 +145,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
       <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <LungsIcon className="h-5 w-5" />
+            <LungsImageIcon className="h-5 w-5" />
             <CardTitle className="text-sm font-bold">เครื่องช่วยหายใจ</CardTitle>
           </div>
           <button 
@@ -224,7 +222,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold">
-              <LungsIcon className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
+              <LungsImageIcon className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
