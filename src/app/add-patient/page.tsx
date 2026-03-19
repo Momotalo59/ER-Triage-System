@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -9,7 +8,10 @@ import {
   UserPlus, 
   Activity, 
   MapPin, 
-  ClipboardList 
+  ClipboardList,
+  Thermometer,
+  Droplets,
+  HeartPulse
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +42,13 @@ export default function AddPatientPage() {
     diagnosis: '',
     destination: 'จุดพักคอย ER',
     status: 'Waiting',
-    o2: '-',
+    o2: '',
+    bloodPressure: '',
+    heartRate: '',
+    temperature: '',
     arrival: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     disp: '-',
-    blood: '-',
+    blood: 'O',
     note: '',
   });
 
@@ -58,7 +63,6 @@ export default function AddPatientPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-10">
-      {/* Header ตามรูปแบบที่กำหนด */}
       <header className="bg-[#b22222] text-white p-3 shadow-md sticky top-0 z-40">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -153,7 +157,7 @@ export default function AddPatientPage() {
                 <Label htmlFor="symptoms" className="text-slate-600 font-medium">อาการสำคัญ (Chief Complaint)</Label>
                 <Textarea 
                   id="symptoms" 
-                  className="bg-slate-50 border-slate-200 text-slate-900 min-h-[120px] text-lg"
+                  className="bg-slate-50 border-slate-200 text-slate-900 min-h-[100px] text-lg"
                   placeholder="ระบุอาการแรกรับของผู้ป่วย..."
                   value={formData.symptoms} 
                   onChange={e => setFormData(p => ({...p, symptoms: e.target.value}))}
@@ -161,7 +165,74 @@ export default function AddPatientPage() {
               </div>
             </section>
 
-            {/* Section 2: การคัดกรองและสถานะ */}
+            {/* Section 2: สัญญาณชีพและหมู่เลือด */}
+            <section className="space-y-6">
+              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
+                <HeartPulse className="h-7 w-7" /> สัญญาณชีพและข้อมูลทางคลินิก
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="blood" className="text-slate-600 font-medium flex items-center gap-1">
+                    <Droplets className="h-4 w-4 text-red-500" /> หมู่เลือด
+                  </Label>
+                  <Select value={formData.blood} onValueChange={v => setFormData(p => ({...p, blood: v}))}>
+                    <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A">A</SelectItem>
+                      <SelectItem value="B">B</SelectItem>
+                      <SelectItem value="AB">AB</SelectItem>
+                      <SelectItem value="O">O</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bp" className="text-slate-600 font-medium">BP (mmHg)</Label>
+                  <Input 
+                    id="bp" 
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
+                    placeholder="เช่น 120/80"
+                    value={formData.bloodPressure} 
+                    onChange={e => setFormData(p => ({...p, bloodPressure: e.target.value}))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hr" className="text-slate-600 font-medium">Heart Rate (bpm)</Label>
+                  <Input 
+                    id="hr" 
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
+                    placeholder="เช่น 80"
+                    value={formData.heartRate} 
+                    onChange={e => setFormData(p => ({...p, heartRate: e.target.value}))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="temp" className="text-slate-600 font-medium flex items-center gap-1">
+                    <Thermometer className="h-4 w-4 text-orange-500" /> Temp (°C)
+                  </Label>
+                  <Input 
+                    id="temp" 
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
+                    placeholder="เช่น 36.5"
+                    value={formData.temperature} 
+                    onChange={e => setFormData(p => ({...p, temperature: e.target.value}))} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="o2" className="text-slate-600 font-medium">O2 Sat (%)</Label>
+                  <Input 
+                    id="o2" 
+                    className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
+                    placeholder="เช่น 98"
+                    value={formData.o2} 
+                    onChange={e => setFormData(p => ({...p, o2: e.target.value}))} 
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Section 3: การคัดกรองและสถานะ */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <Activity className="h-7 w-7" /> การคัดกรองและแผนการรักษา

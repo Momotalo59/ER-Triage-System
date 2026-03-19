@@ -14,6 +14,9 @@ export interface Patient {
   status: PatientStatus;
   destination: string;
   o2: string;
+  bloodPressure: string;
+  heartRate: string;
+  temperature: string;
   arrival: string;
   disp: string;
   blood: string;
