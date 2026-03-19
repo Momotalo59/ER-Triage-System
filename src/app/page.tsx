@@ -24,6 +24,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
@@ -52,6 +62,10 @@ export default function MCIListPage() {
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [newPlanLocation, setNewPlanLocation] = useState("");
 
+  // States for Delete Alert Dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<{ id: string, title: string } | null>(null);
+
   const getPlanStats = (planId: string) => {
     const planPatients = (allPatients || []).filter(p => p.planId === planId);
     return {
@@ -63,15 +77,22 @@ export default function MCIListPage() {
     };
   };
 
-  const handleDeleteMCI = (id: string, title: string) => {
-    if (confirm(`คุณต้องการลบแผน "${title}" ใช่หรือไม่? การลบนี้จะมีผลถาวรในฐานข้อมูล`)) {
-      const docRef = doc(firestore, 'mci_plans', id);
+  const handleDeleteClick = (id: string, title: string) => {
+    setPlanToDelete({ id, title });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteMCI = () => {
+    if (planToDelete) {
+      const docRef = doc(firestore, 'mci_plans', planToDelete.id);
       deleteDocumentNonBlocking(docRef);
       toast({
         variant: "destructive",
         title: "ลบแผนสำเร็จ",
-        description: `แผน ${title} ถูกลบออกจากฐานข้อมูลแล้ว`,
+        description: `แผน ${planToDelete.title} ถูกลบออกจากฐานข้อมูลแล้ว`,
       });
+      setIsDeleteDialogOpen(false);
+      setPlanToDelete(null);
     }
   };
 
@@ -217,7 +238,7 @@ export default function MCIListPage() {
                           variant="outline" 
                           size="icon" 
                           className="h-12 w-12 border-red-100 bg-red-50 hover:bg-red-100 rounded-xl"
-                          onClick={() => handleDeleteMCI(mci.id, mci.title)}
+                          onClick={() => handleDeleteClick(mci.id, mci.title)}
                         >
                           <Trash2 className="h-6 w-6 text-red-600" />
                         </Button>
@@ -286,6 +307,32 @@ export default function MCIListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Pop-up สำหรับยืนยันการลบแผน */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white text-slate-900 border-slate-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold text-red-600 flex items-center gap-2">
+              <Trash2 className="h-6 w-6" /> ยืนยันการลบแผน MCI
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 text-lg py-2">
+              คุณต้องการลบแผน <strong>"{planToDelete?.title}"</strong> ใช่หรือไม่? <br />
+              การลบข้อมูลนี้จะมีผลถาวรและไม่สามารถกู้คืนได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel className="border-slate-200 text-slate-600 h-12 px-6 font-medium hover:bg-slate-50">
+              ยกเลิก
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700 text-white font-bold h-12 px-8 rounded-lg shadow-lg"
+              onClick={confirmDeleteMCI}
+            >
+              ลบทิ้งถาวร
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
