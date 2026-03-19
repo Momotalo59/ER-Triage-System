@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
@@ -47,7 +47,8 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
   </div>
 );
 
-function RealTimeClock() {
+// Memoized RealTimeClock to prevent re-rendering the entire page
+const RealTimeClock = React.memo(function RealTimeClock() {
   const [time, setTime] = useState("");
   
   useEffect(() => {
@@ -67,7 +68,7 @@ function RealTimeClock() {
   }, []);
 
   return <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {time || "กำลังโหลด..."}</span>;
-}
+});
 
 export default function CrisisTriageDashboard() {
   const router = useRouter();
@@ -114,9 +115,13 @@ export default function CrisisTriageDashboard() {
   }, [planId]);
 
   const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
-  const patients = (patientsData || []).sort((a, b) => {
-    return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
-  });
+  
+  // Memoize sorted patients to improve performance
+  const patients = useMemo(() => {
+    return (patientsData || []).sort((a, b) => {
+      return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+    });
+  }, [patientsData]);
 
   const handleDeletePatient = (id: string) => {
     if (confirm('ยืนยันการลบข้อมูล?')) {

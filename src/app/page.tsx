@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -66,16 +66,24 @@ export default function MCIListPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<{ id: string, title: string } | null>(null);
 
-  const getPlanStats = (planId: string) => {
-    const planPatients = (allPatients || []).filter(p => p.planId === planId);
-    return {
-      red: planPatients.filter(p => p.triageLevel === 'Critical').length,
-      yellow: planPatients.filter(p => p.triageLevel === 'Urgent').length,
-      green: planPatients.filter(p => p.triageLevel === 'Minor').length,
-      black: planPatients.filter(p => p.triageLevel === 'Deceased').length,
-      total: planPatients.length
-    };
-  };
+  // Optimized Stats Calculation using useMemo to prevent unnecessary re-calculations
+  const planStatsMap = useMemo(() => {
+    const map: Record<string, { red: number; yellow: number; green: number; black: number; total: number }> = {};
+    if (!allPatients) return map;
+    
+    allPatients.forEach(p => {
+      const pId = p.planId || 'unknown';
+      if (!map[pId]) {
+        map[pId] = { red: 0, yellow: 0, green: 0, black: 0, total: 0 };
+      }
+      map[pId].total++;
+      if (p.triageLevel === 'Critical') map[pId].red++;
+      else if (p.triageLevel === 'Urgent') map[pId].yellow++;
+      else if (p.triageLevel === 'Minor') map[pId].green++;
+      else if (p.triageLevel === 'Deceased') map[pId].black++;
+    });
+    return map;
+  }, [allPatients]);
 
   const handleDeleteClick = (id: string, title: string) => {
     setPlanToDelete({ id, title });
@@ -190,7 +198,7 @@ export default function MCIListPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {mciPlans.map((mci) => {
-              const stats = getPlanStats(mci.id);
+              const stats = planStatsMap[mci.id] || { red: 0, yellow: 0, green: 0, black: 0, total: 0 };
               return (
                 <div key={mci.id} className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-200 transition-transform hover:scale-[1.01]">
                   <div className={`${mci.status === 'Open' ? 'bg-[#b22222]' : 'bg-[#4a5568]'} text-white p-4 flex justify-between items-center px-5`}>

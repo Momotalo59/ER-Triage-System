@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -56,9 +57,12 @@ export default function RelativeBoardPage() {
 
   const { data: patientsData, isLoading } = useCollection<Patient>(memoizedQuery);
 
-  const filteredPatients = (patientsData || [])
-    .filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+  // Optimized filtering and sorting using useMemo
+  const filteredPatients = useMemo(() => {
+    return (patientsData || [])
+      .filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+  }, [patientsData, searchTerm]);
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
