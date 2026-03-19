@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
@@ -61,6 +61,25 @@ export default function CrisisTriageDashboard() {
   const [tempPlanName, setTempPlanName] = useState(planName);
   const [tempPlanLocation, setTempPlanLocation] = useState(planLocation);
 
+  // Time State for Hydration safety
+  const [currentDateTime, setCurrentDateTime] = useState<string>("");
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear() + 543; // Buddhist Era
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentDateTime(`${day}/${month}/${year} ${hours}:${minutes}`);
+    };
+    
+    updateTime();
+    const timer = setInterval(updateTime, 60000); // Update every minute
+    return () => clearInterval(timer);
+  }, []);
+
   const handleAddPatient = (data: Partial<Patient>) => {
     if (editingPatient) {
       setPatients(prev => prev.map(p => p.id === editingPatient.id ? { ...p, ...data } as Patient : p));
@@ -94,26 +113,33 @@ export default function CrisisTriageDashboard() {
       <header className="bg-[#b22222] text-white p-4 shadow-md">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-md w-14 h-14 flex items-center justify-center overflow-hidden">
+            <div className="bg-white p-1 rounded-md w-14 h-14 flex items-center justify-center overflow-hidden shadow-sm">
                <Image 
                  src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" 
                  alt="Overbrook Logo" 
                  width={56}
                  height={56}
                  className="object-contain"
+                 priority
                />
             </div>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 {planName}
                 <span className="bg-emerald-500 text-[10px] px-1.5 rounded-full flex items-center gap-1">
-                  <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" /> LIVE
+                  <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" /> สด
                 </span>
               </h1>
               <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
-                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> 18/03/2569 09:15</span>
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {planLocation}</span>
-                <span className="flex items-center gap-1 text-yellow-300"><RefreshCw className="h-3 w-3" /> รีเฟรชอัตโนมัติ</span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> {currentDateTime || "กำลังโหลด..."}
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> {planLocation}
+                </span>
+                <span className="flex items-center gap-1 text-yellow-300">
+                  <RefreshCw className="h-3 w-3 animate-spin-slow" /> รีเฟรชอัตโนมัติ
+                </span>
               </div>
             </div>
           </div>
@@ -164,7 +190,10 @@ export default function CrisisTriageDashboard() {
             <h2 className="font-bold flex items-center gap-2">
               <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
             </h2>
-            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => setIsDialogOpen(true)}>
+            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => {
+              setEditingPatient(null);
+              setIsDialogOpen(true);
+            }}>
               <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
             </Button>
           </div>
