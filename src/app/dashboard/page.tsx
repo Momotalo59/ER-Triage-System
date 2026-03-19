@@ -96,6 +96,18 @@ export default function CrisisTriageDashboard() {
     });
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Add a brief highlight effect
+      element.classList.add('ring-4', 'ring-[#b22222]/20');
+      setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-[#b22222]/20');
+      }, 2000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
       <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
@@ -160,10 +172,20 @@ export default function CrisisTriageDashboard() {
             >
               <Plus className="h-4 w-4" /> เพิ่มผู้ป่วย
             </Button>
-            <Button variant="secondary" size="sm" className="h-8 bg-white text-black hover:bg-slate-100 gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-8 bg-white text-black hover:bg-slate-100 gap-2"
+              onClick={() => scrollToSection('blood-section')}
+            >
               <Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด
             </Button>
-            <Button variant="secondary" size="sm" className="h-8 bg-white text-black hover:bg-slate-100 gap-2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="h-8 bg-white text-black hover:bg-slate-100 gap-2"
+              onClick={() => scrollToSection('ventilator-section')}
+            >
               <Wind className="h-4 w-4 text-slate-600" /> เครื่องช่วยหายใจ
             </Button>
             <Button variant="destructive" size="sm" className="h-8 gap-2" onClick={() => router.push('/')}>

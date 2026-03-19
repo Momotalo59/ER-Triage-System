@@ -53,7 +53,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
       </Card>
 
       {/* 3. หมู่เลือด */}
-      <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
+      <Card id="blood-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden transition-all duration-300">
         <CardHeader className="bg-[#b22222] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
             <Droplets className="h-4 w-4" />
@@ -61,7 +61,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
           </div>
           <Edit className="h-3.5 w-3.5 opacity-80 cursor-pointer" />
         </CardHeader>
-        <CardContent className="p-4 bg-slate-50">
+        <CardContent className="p-4 bg-white">
           <div className="grid grid-cols-4 gap-2">
             <BloodItem label="A" count={resources.bloodInventory.A} />
             <BloodItem label="B" count={resources.bloodInventory.B} />
@@ -72,7 +72,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
       </Card>
 
       {/* 4. เครื่องช่วยหายใจ */}
-      <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
+      <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden transition-all duration-300">
         <CardHeader className="bg-[#004d40] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
             <Wind className="h-4 w-4" />
@@ -131,7 +131,7 @@ function TriageSmallRow({ color, label, count, labelColor = "text-white" }: { co
 
 function BloodItem({ label, count }: { label: string; count: number }) {
   return (
-    <div className="flex flex-col items-center bg-white rounded-lg p-2 shadow-sm border border-slate-100 h-16 justify-center">
+    <div className="flex flex-col items-center bg-slate-50 rounded-lg p-2 shadow-sm border border-slate-100 h-16 justify-center">
       <span className="text-[#b22222] font-black text-xl leading-none">{count}</span>
       <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">{label}</span>
     </div>
