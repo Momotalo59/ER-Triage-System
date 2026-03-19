@@ -4,18 +4,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Patient, ResourceSummary } from "@/lib/types";
-import { Droplets, Wind, Stethoscope, Microscope } from "lucide-react";
+import { Droplets, Wind, Stethoscope } from "lucide-react";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
-  Cell
+  Cell,
+  Tooltip
 } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 interface ResourceWidgetsProps {
   patients: Patient[];
@@ -31,10 +29,10 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
   }, {} as Record<string, number>);
 
   const statusData = [
-    { name: 'Waiting', value: statusCounts['Waiting'] || 0, color: 'hsl(var(--accent))' },
-    { name: 'X-Ray', value: statusCounts['X-Ray'] || 0, color: 'hsl(var(--primary))' },
-    { name: 'Lab', value: statusCounts['Lab'] || 0, color: 'hsl(var(--primary))' },
-    { name: 'Admit', value: statusCounts['Admit'] || 0, color: 'hsl(var(--primary))' },
+    { name: 'รอตรวจ', value: statusCounts['Waiting'] || 0, color: 'hsl(var(--accent))' },
+    { name: 'เอกซเรย์', value: statusCounts['X-Ray'] || 0, color: 'hsl(var(--primary))' },
+    { name: 'ห้องแล็บ', value: statusCounts['Lab'] || 0, color: 'hsl(var(--primary))' },
+    { name: 'รับไว้รักษา', value: statusCounts['Admit'] || 0, color: 'hsl(var(--primary))' },
   ];
 
   const bloodData = Object.entries(resources.bloodInventory).map(([type, units]) => ({
@@ -49,7 +47,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Stethoscope className="h-4 w-4 text-accent" />
-            ED TRIAGE DISTRIBUTION
+            การกระจายตัวของผู้ป่วยในแผนกฉุกเฉิน
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -57,7 +55,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
              <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData} layout="vertical">
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={60} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} width={80} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px' }}
                   itemStyle={{ color: 'hsl(var(--foreground))' }}
@@ -79,7 +77,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Droplets className="h-4 w-4 text-primary" />
-            BLOOD INVENTORY (UNITS)
+            คลังเลือดสำรอง (ยูนิต)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -99,7 +97,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Wind className="h-4 w-4 text-accent" />
-            VENTILATOR USAGE
+            การใช้งานเครื่องช่วยหายใจ
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center h-full pb-8">
@@ -112,7 +110,7 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
           </div>
           <Progress value={ventUsage} className="h-2" />
           <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
-            Critical resource monitoring active. <span className="text-primary font-semibold">{resources.ventilators.total - resources.ventilators.inUse} units available</span> for immediate deployment.
+            ระบบติดตามทรัพยากรวิกฤตทำงานปกติ <span className="text-primary font-semibold">เหลือเครื่องว่าง {resources.ventilators.total - resources.ventilators.inUse} เครื่อง</span> พร้อมใช้งานทันที
           </p>
         </CardContent>
       </Card>

@@ -36,11 +36,11 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
   const [formData, setFormData] = useState<Partial<Patient>>({
     name: '',
     age: 0,
-    gender: 'Male',
+    gender: 'ชาย',
     symptoms: '',
     triageLevel: 'Minor',
     diagnosis: '',
-    destination: 'ER Waiting',
+    destination: 'จุดพักคอย ER',
     status: 'Waiting',
   });
   
@@ -53,11 +53,11 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
       setFormData({
         name: '',
         age: 0,
-        gender: 'Male',
+        gender: 'ชาย',
         symptoms: '',
         triageLevel: 'Minor',
         diagnosis: '',
-        destination: 'ER Waiting',
+        destination: 'จุดพักคอย ER',
         status: 'Waiting',
       });
     }
@@ -65,7 +65,7 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
 
   const handleAiTriage = async () => {
     if (!formData.symptoms) {
-      toast({ title: "Symptoms Required", description: "Please enter patient symptoms first.", variant: "destructive" });
+      toast({ title: "จำเป็นต้องระบุอาการ", description: "กรุณาระบุอาการเบื้องต้นของผู้ป่วยก่อนใช้ AI", variant: "destructive" });
       return;
     }
 
@@ -77,9 +77,9 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
         triageLevel: result.triageLevel as TriageLevel,
         diagnosis: result.justification
       }));
-      toast({ title: "AI Analysis Complete", description: `Suggested Triage: ${result.triageLevel}` });
+      toast({ title: "วิเคราะห์โดย AI สำเร็จ", description: `ระดับคัดกรองที่แนะนำ: ${result.triageLevel}` });
     } catch (error) {
-      toast({ title: "AI Tool Unavailable", description: "Could not retrieve suggestion.", variant: "destructive" });
+      toast({ title: "ระบบ AI ไม่พร้อมใช้งาน", description: "ไม่สามารถเรียกข้อมูลคำแนะนำได้ในขณะนี้", variant: "destructive" });
     } finally {
       setAiLoading(false);
     }
@@ -96,13 +96,13 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
       <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-headline flex items-center gap-2">
-            {initialData ? "Update Patient Record" : "New Patient Registration"}
+            {initialData ? "แก้ไขข้อมูลผู้ป่วย" : "ลงทะเบียนผู้ป่วยใหม่"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">ชื่อ-นามสกุล</Label>
               <Input 
                 id="name" 
                 value={formData.name} 
@@ -112,7 +112,7 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
+                <Label htmlFor="age">อายุ</Label>
                 <Input 
                   id="age" 
                   type="number" 
@@ -121,13 +121,13 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="gender">เพศ</Label>
                 <Select value={formData.gender} onValueChange={v => setFormData(p => ({...p, gender: v}))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="ชาย">ชาย</SelectItem>
+                    <SelectItem value="หญิง">หญิง</SelectItem>
+                    <SelectItem value="อื่นๆ">อื่นๆ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -136,7 +136,7 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
 
           <div className="space-y-2 relative">
             <div className="flex justify-between items-center">
-              <Label htmlFor="symptoms">Symptoms & Chief Complaint</Label>
+              <Label htmlFor="symptoms">อาการสำคัญ (Chief Complaint)</Label>
               <Button 
                 type="button" 
                 variant="outline" 
@@ -146,12 +146,12 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
                 disabled={aiLoading}
               >
                 {aiLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <BrainCircuit className="h-3 w-3" />}
-                AI SUGGEST
+                AI แนะนำระดับการคัดกรอง
               </Button>
             </div>
             <Textarea 
               id="symptoms" 
-              placeholder="Describe symptoms for AI triage assistance..."
+              placeholder="ระบุอาการเพื่อให้ AI ช่วยประเมินระดับความรุนแรง..."
               value={formData.symptoms} 
               onChange={e => setFormData(p => ({...p, symptoms: e.target.value}))}
             />
@@ -159,34 +159,34 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="triage">Triage Level</Label>
+              <Label htmlFor="triage">ระดับการคัดกรอง</Label>
               <Select value={formData.triageLevel} onValueChange={v => setFormData(p => ({...p, triageLevel: v as TriageLevel}))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Critical">Critical</SelectItem>
-                  <SelectItem value="Urgent">Urgent</SelectItem>
-                  <SelectItem value="Minor">Minor</SelectItem>
-                  <SelectItem value="Deceased">Deceased</SelectItem>
+                  <SelectItem value="Critical">วิกฤต (สีแดง)</SelectItem>
+                  <SelectItem value="Urgent">เร่งด่วน (สีชมพู/ส้ม)</SelectItem>
+                  <SelectItem value="Minor">ไม่รุนแรง (สีเขียว)</SelectItem>
+                  <SelectItem value="Deceased">เสียชีวิต (สีดำ)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">สถานะผู้ป่วย</Label>
               <Select value={formData.status} onValueChange={v => setFormData(p => ({...p, status: v as PatientStatus}))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Waiting">Waiting</SelectItem>
-                  <SelectItem value="X-Ray">X-Ray</SelectItem>
-                  <SelectItem value="Lab">Lab</SelectItem>
-                  <SelectItem value="Admit">Admit</SelectItem>
-                  <SelectItem value="Discharged">Discharged</SelectItem>
+                  <SelectItem value="Waiting">รอตรวจ</SelectItem>
+                  <SelectItem value="X-Ray">เอกซเรย์</SelectItem>
+                  <SelectItem value="Lab">ส่งแล็บ</SelectItem>
+                  <SelectItem value="Admit">รับไว้รักษา</SelectItem>
+                  <SelectItem value="Discharged">จำหน่ายกลับบ้าน</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="diagnosis">Diagnosis / AI Justification</Label>
+            <Label htmlFor="diagnosis">การวินิจฉัย / เหตุผลประกอบจาก AI</Label>
             <Input 
               id="diagnosis" 
               value={formData.diagnosis} 
@@ -195,7 +195,7 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="destination">Destination</Label>
+            <Label htmlFor="destination">จุดหมาย/หน่วยรับต่อ</Label>
             <Input 
               id="destination" 
               value={formData.destination} 
@@ -204,9 +204,9 @@ export function PatientFormDialog({ open, onOpenChange, onSubmit, initialData }:
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>ยกเลิก</Button>
             <Button type="submit" className="bg-primary hover:bg-primary/90">
-              {initialData ? "Save Changes" : "Register Patient"}
+              {initialData ? "บันทึกการเปลี่ยนแปลง" : "ลงทะเบียนผู้ป่วย"}
             </Button>
           </DialogFooter>
         </form>

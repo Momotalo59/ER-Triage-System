@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
@@ -24,37 +24,37 @@ import { Toaster } from "@/components/ui/toaster";
 const MOCK_PATIENTS: Patient[] = [
   {
     id: '1',
-    name: 'Somchai Rakdee',
+    name: 'สมชาย รักดี',
     age: 45,
-    gender: 'Male',
-    symptoms: 'Chest pain, difficulty breathing',
+    gender: 'ชาย',
+    symptoms: 'เจ็บหน้าอก หายใจลำบาก',
     triageLevel: 'Critical',
-    diagnosis: 'Possible Myocardial Infarction',
-    destination: 'Cath Lab',
+    diagnosis: 'สงสัยภาวะกล้ามเนื้อหัวใจขาดเลือดเฉียบพลัน',
+    destination: 'ห้องฉีดสีหัวใจ (Cath Lab)',
     status: 'Admit',
     timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
   },
   {
     id: '2',
-    name: 'Wipa Wongwan',
+    name: 'วิภา วงศ์วรรณ',
     age: 28,
-    gender: 'Female',
-    symptoms: 'High fever, persistent cough',
+    gender: 'หญิง',
+    symptoms: 'ไข้สูง ไอต่อเนื่อง',
     triageLevel: 'Urgent',
-    diagnosis: 'Severe Pneumonia',
-    destination: 'Ward A',
+    diagnosis: 'ปอดอักเสบรุนแรง',
+    destination: 'วอร์ด A',
     status: 'Waiting',
     timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
   },
   {
     id: '3',
-    name: 'Anan Sukhum',
+    name: 'อนันต์ สุขุม',
     age: 62,
-    gender: 'Male',
-    symptoms: 'Laceration on right arm',
+    gender: 'ชาย',
+    symptoms: 'แผลฉีกขาดที่แขนขวา',
     triageLevel: 'Minor',
-    diagnosis: 'Soft tissue injury',
-    destination: 'ER Unit 2',
+    diagnosis: 'บาดแผลเนื้อเยื่ออ่อน',
+    destination: 'หน่วยฉุกเฉิน 2',
     status: 'X-Ray',
     timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
   }
@@ -98,7 +98,7 @@ export default function CrisisTriageDashboard() {
   };
 
   const handleDeletePatient = (id: string) => {
-    if (confirm('Are you sure you want to remove this patient record?')) {
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลผู้ป่วยรายนี้?')) {
       setPatients(prev => prev.filter(p => p.id !== id));
     }
   };
@@ -126,28 +126,28 @@ export default function CrisisTriageDashboard() {
           <SidebarContent className="p-4">
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive tooltip="Main Dashboard">
+                <SidebarMenuButton isActive tooltip="แผงควบคุมหลัก">
                   <LayoutDashboard className="h-5 w-5" />
-                  <span className="font-medium">Dashboard</span>
+                  <span className="font-medium">แผงควบคุม</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Patient Directory">
+                <SidebarMenuButton tooltip="รายชื่อผู้ป่วย">
                   <Users className="h-5 w-5" />
-                  <span className="font-medium">Patients</span>
+                  <span className="font-medium">ผู้ป่วย</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings">
+                <SidebarMenuButton tooltip="ตั้งค่าระบบ">
                   <Settings className="h-5 w-5" />
-                  <span className="font-medium">Settings</span>
+                  <span className="font-medium">ตั้งค่า</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
             <div className="mt-auto p-4 absolute bottom-0 left-0 w-full">
                <SidebarMenuButton className="text-muted-foreground hover:text-white">
                 <LogOut className="h-5 w-5" />
-                <span className="font-medium">Sign Out</span>
+                <span className="font-medium">ออกจากระบบ</span>
               </SidebarMenuButton>
             </div>
           </SidebarContent>
@@ -161,7 +161,7 @@ export default function CrisisTriageDashboard() {
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search patients, ID, or diagnosis..." 
+                  placeholder="ค้นหาชื่อผู้ป่วย, ID หรือการวินิจฉัย..." 
                   className="pl-10 bg-secondary/30 border-none focus-visible:ring-1 ring-accent/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -178,7 +178,7 @@ export default function CrisisTriageDashboard() {
                 className="bg-primary hover:bg-primary/90 text-white font-semibold flex gap-2 rounded-full px-6 shadow-xl shadow-primary/20"
               >
                 <Plus className="h-4 w-4" />
-                NEW ADMISSION
+                รับผู้ป่วยใหม่
               </Button>
             </div>
           </header>
@@ -188,10 +188,10 @@ export default function CrisisTriageDashboard() {
             {/* KPI Overviews */}
             <section>
               <div className="flex items-end justify-between mb-4">
-                <h2 className="text-2xl font-headline font-bold">Live Status Overview</h2>
+                <h2 className="text-2xl font-headline font-bold">สรุปสถานะปัจจุบัน</h2>
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                  LAST UPDATED: JUST NOW
+                  อัปเดตล่าสุด: เมื่อสักครู่นี้
                 </div>
               </div>
               <KPICards patients={patients} />
@@ -200,8 +200,8 @@ export default function CrisisTriageDashboard() {
             {/* Patient Monitor List */}
             <section>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-headline font-semibold">Real-time Patient Monitoring</h2>
-                <Button variant="link" size="sm" className="text-accent p-0 h-auto">View All Patients</Button>
+                <h2 className="text-lg font-headline font-semibold">ติดตามอาการผู้ป่วยแบบเรียลไทม์</h2>
+                <Button variant="link" size="sm" className="text-accent p-0 h-auto">ดูผู้ป่วยทั้งหมด</Button>
               </div>
               <PatientTable 
                 patients={filteredPatients} 
@@ -212,7 +212,7 @@ export default function CrisisTriageDashboard() {
 
             {/* Resource Widgets Grid */}
             <section>
-              <h2 className="text-lg font-headline font-semibold mb-4">Resource & Inventory Analytics</h2>
+              <h2 className="text-lg font-headline font-semibold mb-4">การจัดการทรัพยากรและเวชภัณฑ์</h2>
               <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
             </section>
           </div>
