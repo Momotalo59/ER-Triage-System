@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -67,7 +67,6 @@ function AddPatientContent() {
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
   useEffect(() => {
-    // Set initial arrival time in 24h format only on client side to avoid hydration mismatch
     if (!patientId && !formData.arrival) {
       setFormData(prev => ({
         ...prev,
@@ -86,8 +85,11 @@ function AddPatientContent() {
     }
   }, [existingPatient]);
 
-  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
-    if (e) e.preventDefault();
+  const handleSubmit = useCallback((e?: React.FormEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     const patientsRef = collection(firestore, 'patients');
     const finalPlanId = planIdFromUrl || formData.planId || "";
@@ -113,9 +115,13 @@ function AddPatientContent() {
       });
     }
     
-    // นำทางกลับไปยัง Dashboard พร้อมส่ง planId กลับไปด้วยเพื่อให้แสดงผลได้ถูกต้อง
-    router.push(`/dashboard?id=${finalPlanId}`);
-  };
+    // นำทางกลับทันทีหลังจากบันทึกแบบ Non-blocking
+    if (finalPlanId) {
+      router.push(`/dashboard?id=${finalPlanId}`);
+    } else {
+      router.back();
+    }
+  }, [firestore, formData, patientId, planIdFromUrl, router, toast]);
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-10">
@@ -140,7 +146,7 @@ function AddPatientContent() {
                />
             </div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <UserPlus className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่ (MCI Registration)'}
+              <UserPlus className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่'}
             </h1>
           </div>
           <Button 
