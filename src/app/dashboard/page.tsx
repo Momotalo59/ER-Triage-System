@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
@@ -23,7 +22,6 @@ import {
   Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "@/components/ui/toaster";
 import {
   Dialog,
   DialogContent,
@@ -237,7 +235,6 @@ function DashboardContent() {
           <DialogFooter><Button onClick={() => handleSaveResources({ ventilators: tempVents })} className="bg-[#1a5f7a] font-bold">บันทึก</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-      <Toaster />
     </div>
   );
 }
