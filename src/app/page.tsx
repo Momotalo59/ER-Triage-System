@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 const MOCK_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
@@ -95,8 +96,14 @@ export default function CrisisTriageDashboard() {
       <header className="bg-[#b22222] text-white p-4 shadow-md">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded">
-               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b22222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49 0 2.82.94 3.28 2.35.45 1.42-.14 2.98-1.4 3.73-1.25.75-2.88.54-3.92-.5l-.36-.36-1.59 1.59.36.36c1.04 1.04 1.25 2.67.5 3.92-.75 1.26-2.31 1.85-3.73 1.4-1.41-.46-2.35-1.79-2.35-3.28v-2.17c0-1.49-.94-2.82-2.35-3.28-1.42-.45-2.98.14-3.73 1.4-.75 1.25-.54 2.88.5 3.92l.36.36-1.59 1.59-.36-.36c-1.04-1.04-2.67-1.25-3.92-.5-1.26.75-1.85 2.31-1.4 3.73.46 1.41 1.79 2.35 3.28 2.35h2.17c1.49 0 2.82-.94 3.28-2.35.45-1.42-.14-2.98 1.4-3.73 1.25-.75 2.88-.54 3.92.5l.36.36 1.59-1.59-.36-.36c-1.04-1.04-1.25-2.67-.5-3.92.75-1.26 2.31-1.85 3.73-1.4 1.41.46 2.35 1.79 2.35 3.28v2.17z"/></svg>
+            <div className="bg-white p-1 rounded-md w-14 h-14 flex items-center justify-center overflow-hidden">
+               <Image 
+                 src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" 
+                 alt="Overbrook Logo" 
+                 width={56}
+                 height={56}
+                 className="object-contain"
+               />
             </div>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
