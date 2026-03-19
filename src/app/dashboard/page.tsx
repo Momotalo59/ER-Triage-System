@@ -16,7 +16,6 @@ import {
   Edit,
   Monitor,
   Droplets,
-  Wind,
   XCircle,
   Check,
 } from "lucide-react";
@@ -142,7 +141,7 @@ export default function CrisisTriageDashboard() {
               <h1 className="text-2xl font-bold text-white">
                 {planName}
               </h1>
-              <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
+              <div className="flex items-center gap-4 text-xs opacity-90 mt-1 text-white">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" /> {currentDateTime || "กำลังโหลด..."}
                 </span>
@@ -206,7 +205,15 @@ export default function CrisisTriageDashboard() {
               className="h-8 bg-white text-black hover:bg-slate-100 gap-2"
               onClick={() => scrollToSection('ventilator-section')}
             >
-              <Wind className="h-4 w-4 text-slate-600" /> เครื่องช่วยหายใจ
+              <div className="relative h-4 w-4 overflow-hidden">
+                <Image 
+                  src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp" 
+                  alt="Ventilator" 
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              เครื่องช่วยหายใจ
             </Button>
             <Button variant="destructive" size="sm" className="h-8 gap-2" onClick={() => router.push('/')}>
               <XCircle className="h-4 w-4" /> ปิดแผน
@@ -220,8 +227,8 @@ export default function CrisisTriageDashboard() {
 
         <section className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
           <div className="bg-[#b22222] text-white px-4 py-2 flex justify-between items-center">
-            <h2 className="font-bold flex items-center gap-2">
-              <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
+            <h2 className="font-bold flex items-center gap-2 text-white">
+              <LayoutList className="h-4 w-4 text-white" /> รายชื่อผู้ป่วย ({patients.length} ราย)
             </h2>
             <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => router.push('/add-patient')}>
               <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
@@ -241,31 +248,31 @@ export default function CrisisTriageDashboard() {
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold">
-              <Edit className="h-5 w-5" /> แก้ไขข้อมูลเหตุการณ์
+              <Edit className="h-5 w-5 text-[#b22222]" /> แก้ไขข้อมูลเหตุการณ์
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="planName" className="font-bold">ชื่อเหตุการณ์ / แผน MCI</Label>
+              <Label htmlFor="planName" className="font-bold text-slate-700">ชื่อเหตุการณ์ / แผน MCI</Label>
               <Input 
                 id="planName" 
-                className="bg-slate-50 border-slate-200"
+                className="bg-slate-50 border-slate-200 text-slate-900"
                 value={tempPlanName} 
                 onChange={(e) => setTempPlanName(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="planLocation" className="font-bold">สถานที่เกิดเหตุ</Label>
+              <Label htmlFor="planLocation" className="font-bold text-slate-700">สถานที่เกิดเหตุ</Label>
               <Input 
                 id="planLocation" 
-                className="bg-slate-50 border-slate-200"
+                className="bg-slate-50 border-slate-200 text-slate-900"
                 value={tempPlanLocation} 
                 onChange={(e) => setTempPlanLocation(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="border-slate-200" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
             <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2" onClick={handleUpdatePlan}>
               <Check className="h-4 w-4" /> บันทึกการเปลี่ยนแปลง
             </Button>

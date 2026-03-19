@@ -82,8 +82,8 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
       {/* 1. สถานะผู้ป่วย */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#334155] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
-          <LayoutList className="h-4 w-4" />
-          <CardTitle className="text-sm font-bold">สถานะผู้ป่วย</CardTitle>
+          <LayoutList className="h-4 w-4 text-white" />
+          <CardTitle className="text-sm font-bold text-white">สถานะผู้ป่วย</CardTitle>
         </CardHeader>
         <CardContent className="p-3 bg-white">
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
@@ -102,8 +102,8 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
       {/* 2. ED Triage */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#8e24aa] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
-          <Activity className="h-4 w-4" />
-          <CardTitle className="text-sm font-bold">ED Triage</CardTitle>
+          <Activity className="h-4 w-4 text-white" />
+          <CardTitle className="text-sm font-bold text-white">ED Triage</CardTitle>
         </CardHeader>
         <CardContent className="p-3 bg-white space-y-1.5">
           <TriageSmallRow color="bg-[#e63946]" label="แดง" count={getTriageCount('Critical')} />
@@ -118,8 +118,8 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
       <Card id="blood-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#b22222] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <Droplets className="h-4 w-4" />
-            <CardTitle className="text-sm font-bold">หมู่เลือด</CardTitle>
+            <Droplets className="h-4 w-4 text-white" />
+            <CardTitle className="text-sm font-bold text-white">หมู่เลือด</CardTitle>
           </div>
           <button 
             onClick={() => {
@@ -128,7 +128,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             }}
             className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
-            <Edit className="h-3 w-3" />
+            <Edit className="h-3 w-3 text-white" />
           </button>
         </CardHeader>
         <CardContent className="p-4 bg-white">
@@ -146,7 +146,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
             <LungsImageIcon className="h-5 w-5" />
-            <CardTitle className="text-sm font-bold">เครื่องช่วยหายใจ</CardTitle>
+            <CardTitle className="text-sm font-bold text-white">เครื่องช่วยหายใจ</CardTitle>
           </div>
           <button 
             onClick={() => {
@@ -155,30 +155,30 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             }}
             className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
-            <Edit className="h-3 w-3" />
+            <Edit className="h-3 w-3 text-white" />
           </button>
         </CardHeader>
         <CardContent className="p-2 bg-white">
           <table className="w-full text-xs text-slate-900 border border-slate-200 border-collapse">
             <thead>
               <tr className="bg-slate-50">
-                <th className="p-2 border border-slate-200"></th>
-                <th className="p-2 border border-slate-200 font-bold">Vent</th>
-                <th className="p-2 border border-slate-200 font-bold">Bird</th>
+                <th className="p-2 border border-slate-200 text-slate-600 font-bold"></th>
+                <th className="p-2 border border-slate-200 text-slate-600 font-bold">Vent</th>
+                <th className="p-2 border border-slate-200 text-slate-600 font-bold">Bird</th>
               </tr>
             </thead>
             <tbody>
               {resources.ventilators.map((dept) => (
                 <tr key={dept.id}>
-                  <td className="p-2 border border-slate-200 font-bold">{dept.name || 'ไม่ระบุ'}</td>
-                  <td className="p-2 border border-slate-200 text-center">{dept.vent || 0}</td>
-                  <td className="p-2 border border-slate-200 text-center">{dept.bird || 0}</td>
+                  <td className="p-2 border border-slate-200 font-bold text-slate-700">{dept.name || 'ไม่ระบุ'}</td>
+                  <td className="p-2 border border-slate-200 text-center text-slate-900">{dept.vent || 0}</td>
+                  <td className="p-2 border border-slate-200 text-center text-slate-900">{dept.bird || 0}</td>
                 </tr>
               ))}
               <tr className="bg-slate-100 font-bold">
-                <td className="p-2 border border-slate-200">รวม</td>
-                <td className="p-2 border border-slate-200 text-center">{totalVent}</td>
-                <td className="p-2 border border-slate-200 text-center">{totalBird}</td>
+                <td className="p-2 border border-slate-200 text-slate-900">รวม</td>
+                <td className="p-2 border border-slate-200 text-center text-slate-900">{totalVent}</td>
+                <td className="p-2 border border-slate-200 text-center text-slate-900">{totalBird}</td>
               </tr>
             </tbody>
           </table>
@@ -189,13 +189,13 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold">
-              <Droplets className="h-6 w-6" /> แก้ไขสต็อกหมู่เลือด
+              <Droplets className="h-6 w-6 text-[#b22222]" /> แก้ไขสต็อกหมู่เลือด
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-6 py-6">
             {Object.keys(tempBlood).map((type) => (
               <div key={type} className="grid gap-2">
-                <Label htmlFor={`blood-${type}`} className="font-bold">หมู่เลือด {type}</Label>
+                <Label htmlFor={`blood-${type}`} className="font-bold text-slate-700">หมู่เลือด {type}</Label>
                 <Input 
                   id={`blood-${type}`}
                   type="number"
@@ -210,7 +210,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             ))}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="border-slate-200" onClick={() => setIsBloodEditOpen(false)}>ยกเลิก</Button>
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsBloodEditOpen(false)}>ยกเลิก</Button>
             <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2 px-6" onClick={handleSaveBlood}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
@@ -235,29 +235,29 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
                   <Trash2 className="h-4 w-4" />
                 </button>
                 <div className="grid gap-2">
-                  <Label className="font-bold text-xs">ชื่อแผนก/หน่วยงาน</Label>
+                  <Label className="font-bold text-xs text-slate-700">ชื่อแผนก/หน่วยงาน</Label>
                   <Input 
                     placeholder="เช่น ER, ICU, ศูนย์ฯ"
-                    className="bg-white border-slate-200"
+                    className="bg-white border-slate-200 text-slate-900"
                     value={dept.name}
                     onChange={(e) => handleUpdateDept(dept.id, 'name', e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label className="font-bold text-xs">Vent (เครื่อง)</Label>
+                    <Label className="font-bold text-xs text-slate-700">Vent (เครื่อง)</Label>
                     <Input 
                       type="number"
-                      className="bg-white border-slate-200"
+                      className="bg-white border-slate-200 text-slate-900"
                       value={dept.vent}
                       onChange={(e) => handleUpdateDept(dept.id, 'vent', parseInt(e.target.value) || 0)}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="font-bold text-xs">Bird (เครื่อง)</Label>
+                    <Label className="font-bold text-xs text-slate-700">Bird (เครื่อง)</Label>
                     <Input 
                       type="number"
-                      className="bg-white border-slate-200"
+                      className="bg-white border-slate-200 text-slate-900"
                       value={dept.bird}
                       onChange={(e) => handleUpdateDept(dept.id, 'bird', parseInt(e.target.value) || 0)}
                     />
@@ -267,14 +267,14 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             ))}
             <Button 
               variant="outline" 
-              className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12"
+              className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12 text-slate-500"
               onClick={handleAddDept}
             >
               <Plus className="h-4 w-4" /> เพิ่มแผนกใหม่
             </Button>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="border-slate-200" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
             <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={handleSaveVent}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
