@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Patient, ResourceSummary } from "@/lib/types";
-import { LayoutList, Activity, Droplets, Wind, Edit, Check } from "lucide-react";
+import { LayoutList, Activity, Droplets, Edit, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,22 @@ interface ResourceWidgetsProps {
   resources: ResourceSummary;
   onUpdateResources: (newResources: ResourceSummary) => void;
 }
+
+// Custom Lungs Icon for the Ventilator widget
+const LungsIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M12 3v13M12 16a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-3c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v3" />
+    <path d="M12 16a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-3c0-1.1-.9-2-2-2h-1c-1.1 0-2 .9-2 2v3" />
+  </svg>
+);
 
 export function ResourceWidgets({ patients, resources, onUpdateResources }: ResourceWidgetsProps) {
   const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
@@ -47,6 +63,10 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
     });
     setIsVentEditOpen(false);
   };
+
+  // Calculation for total ventilators
+  const totalVent = (resources.ventilators?.er?.vent || 0) + (resources.ventilators?.center?.vent || 0);
+  const totalBird = (resources.ventilators?.er?.bird || 0) + (resources.ventilators?.center?.bird || 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -97,9 +117,9 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
               setTempBlood(resources.bloodInventory);
               setIsBloodEditOpen(true);
             }}
-            className="p-1 hover:bg-white/20 rounded transition-colors"
+            className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
-            <Edit className="h-3.5 w-3.5 opacity-80" />
+            <Edit className="h-3 w-3" />
           </button>
         </CardHeader>
         <CardContent className="p-4 bg-white">
@@ -112,11 +132,11 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardContent>
       </Card>
 
-      {/* 4. เครื่องช่วยหายใจ */}
+      {/* 4. เครื่องช่วยหายใจ (ปรับปรุงใหม่ตามรูปภาพ) */}
       <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
-        <CardHeader className="bg-[#004d40] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
+        <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <Wind className="h-4 w-4" />
+            <LungsIcon className="h-4 w-4" />
             <CardTitle className="text-sm font-bold">เครื่องช่วยหายใจ</CardTitle>
           </div>
           <button 
@@ -124,38 +144,42 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
               setTempVent(resources.ventilators);
               setIsVentEditOpen(true);
             }}
-            className="p-1 hover:bg-white/20 rounded transition-colors"
+            className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
-            <Edit className="h-3.5 w-3.5 opacity-80" />
+            <Edit className="h-3 w-3" />
           </button>
         </CardHeader>
-        <CardContent className="p-0 bg-white">
-          <table className="w-full text-[11px] text-slate-900 border-collapse">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="p-1.5 text-left px-3 text-slate-500"></th>
-                <th className="p-1.5 text-center border-l border-slate-200 text-slate-500">Vent</th>
-                <th className="p-1.5 text-center border-l border-slate-200 text-slate-500">Bird</th>
+        <CardContent className="p-2 bg-white">
+          <table className="w-full text-xs text-slate-900 border border-slate-200 border-collapse">
+            <thead>
+              <tr className="bg-slate-50">
+                <th className="p-2 border border-slate-200"></th>
+                <th className="p-2 border border-slate-200 font-bold">Vent</th>
+                <th className="p-2 border border-slate-200 font-bold">Bird</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t border-slate-100">
-                <td className="p-1.5 px-3 font-bold text-slate-700">ER</td>
-                <td className="p-1.5 text-center border-l border-slate-100 font-medium">{resources.ventilators.er.vent}</td>
-                <td className="p-1.5 text-center border-l border-slate-100 font-medium">{resources.ventilators.er.bird}</td>
+              <tr>
+                <td className="p-2 border border-slate-200 font-bold">ER</td>
+                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.er?.vent || 0}</td>
+                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.er?.bird || 0}</td>
               </tr>
-              <tr className="bg-slate-50/50 border-t border-slate-100">
-                <td className="p-1.5 px-3 font-bold opacity-60 text-[10px] text-slate-500">รวม</td>
-                <td className="p-1.5 text-center border-l border-slate-100 opacity-60 text-slate-500">26</td>
-                <td className="p-1.5 text-center border-l border-slate-100 opacity-60 text-slate-500">6</td>
+              <tr>
+                <td className="p-2 border border-slate-200 font-bold">ศูนย์ฯ</td>
+                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.center?.vent || 0}</td>
+                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.center?.bird || 0}</td>
+              </tr>
+              <tr className="bg-slate-100 font-bold">
+                <td className="p-2 border border-slate-200">รวม</td>
+                <td className="p-2 border border-slate-200 text-center">{totalVent}</td>
+                <td className="p-2 border border-slate-200 text-center">{totalBird}</td>
               </tr>
             </tbody>
           </table>
-          <div className="h-4 bg-white"></div>
         </CardContent>
       </Card>
 
-      {/* Edit Blood Dialog - บังคับพื้นหลังขาว */}
+      {/* Edit Blood Dialog */}
       <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -189,48 +213,82 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </DialogContent>
       </Dialog>
 
-      {/* Edit Ventilator Dialog - บังคับพื้นหลังขาว */}
+      {/* Edit Ventilator Dialog (ปรับปรุงใหม่ให้แก้ไขได้ทั้ง 2 ส่วน) */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
-        <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
+        <DialogContent className="sm:max-w-[450px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#004d40] text-xl font-bold">
-              <Wind className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
+            <DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold">
+              <LungsIcon className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-6 py-6">
-            <h3 className="font-bold text-base border-b border-slate-100 pb-2 text-slate-600">ห้องฉุกเฉิน (ER)</h3>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="er-vent" className="font-bold">Vent</Label>
-                <Input 
-                  id="er-vent"
-                  type="number"
-                  className="bg-slate-50 border-slate-200 text-slate-900"
-                  value={tempVent.er.vent}
-                  onChange={(e) => setTempVent(prev => ({
-                    ...prev,
-                    er: { ...prev.er, vent: parseInt(e.target.value) || 0 }
-                  }))}
-                />
+          <div className="space-y-6 py-4">
+            <div className="space-y-4">
+              <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2">ห้องฉุกเฉิน (ER)</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="er-vent" className="font-bold text-xs">Vent</Label>
+                  <Input 
+                    id="er-vent"
+                    type="number"
+                    className="bg-slate-50 border-slate-200"
+                    value={tempVent.er.vent}
+                    onChange={(e) => setTempVent(prev => ({
+                      ...prev,
+                      er: { ...prev.er, vent: parseInt(e.target.value) || 0 }
+                    }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="er-bird" className="font-bold text-xs">Bird</Label>
+                  <Input 
+                    id="er-bird"
+                    type="number"
+                    className="bg-slate-50 border-slate-200"
+                    value={tempVent.er.bird}
+                    onChange={(e) => setTempVent(prev => ({
+                      ...prev,
+                      er: { ...prev.er, bird: parseInt(e.target.value) || 0 }
+                    }))}
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="er-bird" className="font-bold">Bird</Label>
-                <Input 
-                  id="er-bird"
-                  type="number"
-                  className="bg-slate-50 border-slate-200 text-slate-900"
-                  value={tempVent.er.bird}
-                  onChange={(e) => setTempVent(prev => ({
-                    ...prev,
-                    er: { ...prev.er, bird: parseInt(e.target.value) || 0 }
-                  }))}
-                />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2">ศูนย์บริหารทรัพยากร (ศูนย์ฯ)</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="center-vent" className="font-bold text-xs">Vent</Label>
+                  <Input 
+                    id="center-vent"
+                    type="number"
+                    className="bg-slate-50 border-slate-200"
+                    value={tempVent.center.vent}
+                    onChange={(e) => setTempVent(prev => ({
+                      ...prev,
+                      center: { ...prev.center, vent: parseInt(e.target.value) || 0 }
+                    }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="center-bird" className="font-bold text-xs">Bird</Label>
+                  <Input 
+                    id="center-bird"
+                    type="number"
+                    className="bg-slate-50 border-slate-200"
+                    value={tempVent.center.bird}
+                    onChange={(e) => setTempVent(prev => ({
+                      ...prev,
+                      center: { ...prev.center, bird: parseInt(e.target.value) || 0 }
+                    }))}
+                  />
+                </div>
               </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="border-slate-200" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
-            <Button className="bg-[#004d40] hover:bg-[#00332a] text-white font-bold gap-2 px-6" onClick={handleSaveVent}>
+            <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={handleSaveVent}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
           </DialogFooter>
