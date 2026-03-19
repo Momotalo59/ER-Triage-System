@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -11,14 +11,17 @@ import {
   LayoutDashboard, 
   XCircle,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 
-interface MCICardProps {
+interface MCIPlan {
   id: string;
   title: string;
   location: string;
@@ -31,67 +34,60 @@ interface MCICardProps {
     green: number;
     black: number;
   };
+  timestamp: string;
 }
-
-const INITIAL_MCI_DATA: MCICardProps[] = [
-  {
-    id: '1',
-    title: 'เพลิงไหม้โรงเรียนสตรีสิริเกศ',
-    location: 'โรงเรียนสตรีสิริเกศ',
-    date: '18/03/2569',
-    time: '09:15',
-    status: 'Open',
-    stats: { red: 11, yellow: 0, green: 0, black: 0 }
-  },
-  {
-    id: '2',
-    title: 'อุบัติเหตุรถทัวร์ชนกัน',
-    location: 'ถ.ศรีสะเกษ-อุบล',
-    date: '13/03/2569',
-    time: '13:53',
-    status: 'Closed',
-    stats: { red: 1, yellow: 1, green: 1, black: 0 }
-  },
-  {
-    id: '3',
-    title: 'อาคารถล่มย่านเศรษฐกิจ',
-    location: 'ตลาดสดเทศบาล',
-    date: '12/03/2569',
-    time: '20:41',
-    status: 'Open',
-    stats: { red: 1, yellow: 0, green: 0, black: 1 }
-  }
-];
 
 export default function MCIListPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [mciList, setMciList] = useState<MCICardProps[]>(INITIAL_MCI_DATA);
+  const firestore = useFirestore();
+
+  // Fetch MCI Plans from Firestore
+  const mciPlansRef = collection(firestore, 'mci_plans');
+  const memoizedQuery = useMemoFirebase(() => query(mciPlansRef, orderBy('timestamp', 'desc')), []);
+  const { data: mciPlans, isLoading } = useCollection<MCIPlan>(memoizedQuery);
 
   const handleDeleteMCI = (id: string, title: string) => {
-    if (confirm(`คุณต้องการลบแผน "${title}" ใช่หรือไม่?`)) {
-      setMciList(prev => prev.filter(item => item.id !== id));
+    if (confirm(`คุณต้องการลบแผน "${title}" ใช่หรือไม่? การลบนี้จะมีผลถาวรในฐานข้อมูล`)) {
+      const docRef = doc(firestore, 'mci_plans', id);
+      deleteDocumentNonBlocking(docRef);
       toast({
         variant: "destructive",
         title: "ลบแผนสำเร็จ",
-        description: `แผน ${title} ถูกลบออกจากระบบแล้ว`,
+        description: `แผน ${title} ถูกลบออกจากฐานข้อมูลแล้ว`,
       });
     }
   };
 
   const handleClosePlan = (id: string, title: string) => {
-    setMciList(prev => prev.map(item => 
-      item.id === id ? { ...item, status: 'Closed' } : item
-    ));
+    const docRef = doc(firestore, 'mci_plans', id);
+    updateDocumentNonBlocking(docRef, { status: 'Closed' });
     toast({
       title: "ปิดแผนสำเร็จ",
       description: `สถานะของแผน ${title} ถูกเปลี่ยนเป็น 'ปิดแล้ว'`,
     });
   };
 
+  const handleCreateNewPlan = () => {
+    const newPlan = {
+      title: 'แผน MCI ใหม่',
+      location: 'ระบุสถานที่',
+      date: new Date().toLocaleDateString('th-TH'),
+      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      status: 'Open',
+      stats: { red: 0, yellow: 0, green: 0, black: 0 },
+      timestamp: new Date().toISOString()
+    };
+    
+    addDocumentNonBlocking(mciPlansRef, newPlan);
+    toast({
+      title: "สร้างแผนใหม่สำเร็จ",
+      description: "คุณสามารถเริ่มจัดการผู้ป่วยในแผนนี้ได้ทันที",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-20">
-      {/* Header ตามรูปภาพ */}
       <header className="bg-[#b22222] text-white p-6 shadow-lg">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-5">
@@ -114,25 +110,31 @@ export default function MCIListPage() {
           </div>
           <Button 
             className="bg-white/10 hover:bg-white/20 border-2 border-white text-white rounded-full px-8 py-7 text-xl font-black gap-3 transition-all"
-            onClick={() => router.push('/dashboard')}
+            onClick={handleCreateNewPlan}
           >
             <Plus className="h-7 w-7" /> เปิดแผน MCI ใหม่
           </Button>
         </div>
       </header>
 
-      {/* Grid รายการ Card */}
       <main className="max-w-[1600px] mx-auto p-8">
-        {mciList.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
+            <p className="text-slate-500 font-medium">กำลังโหลดข้อมูลจากฐานข้อมูลจริง...</p>
+          </div>
+        ) : !mciPlans || mciPlans.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-slate-300">
             <AlertTriangle className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-400 text-xl font-medium">ไม่พบรายการแผน MCI ในขณะนี้</p>
+            <p className="text-slate-400 text-xl font-medium">ไม่พบรายการแผน MCI ในฐานข้อมูล</p>
+            <Button variant="link" onClick={handleCreateNewPlan} className="text-[#b22222] font-bold mt-2">
+              สร้างแผนแรกของคุณที่นี่
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mciList.map((mci) => (
+            {mciPlans.map((mci) => (
               <div key={mci.id} className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-200 transition-transform hover:scale-[1.01]">
-                {/* Card Header */}
                 <div className={`${mci.status === 'Open' ? 'bg-[#b22222]' : 'bg-[#4a5568]'} text-white p-4 flex justify-between items-center px-5`}>
                   <div className="flex items-center gap-3 font-bold truncate">
                     <AlertTriangle className="h-5 w-5" />
@@ -143,7 +145,6 @@ export default function MCIListPage() {
                   </Badge>
                 </div>
 
-                {/* Card Body */}
                 <div className="p-6 flex-1">
                   <div className="flex flex-col gap-3 text-slate-500 text-sm mb-8">
                     <div className="flex items-center gap-3">
@@ -154,7 +155,6 @@ export default function MCIListPage() {
                     </div>
                   </div>
 
-                  {/* Triage Boxes */}
                   <div className="grid grid-cols-4 gap-3 mb-8">
                     <TriageBox color="bg-[#e63946]" label="แดง" count={mci.stats.red} />
                     <TriageBox color="bg-[#ffb703]" label="เหลือง" count={mci.stats.yellow} />
@@ -189,7 +189,6 @@ export default function MCIListPage() {
                   </div>
                 </div>
 
-                {/* Card Footer Button */}
                 <div className="border-t border-slate-100 bg-slate-50/50">
                   <Button 
                     variant="ghost" 
