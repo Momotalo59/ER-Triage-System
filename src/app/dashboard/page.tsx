@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -120,16 +119,11 @@ export default function CrisisTriageDashboard() {
         top: offsetPosition,
         behavior: 'smooth'
       });
-      
-      element.classList.add('ring-4', 'ring-[#b22222]/20', 'rounded-lg');
-      setTimeout(() => {
-        element.classList.remove('ring-4', 'ring-[#b22222]/20');
-      }, 2000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
+    <div className="min-h-screen bg-background font-sarabun text-slate-900">
       <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
@@ -144,7 +138,7 @@ export default function CrisisTriageDashboard() {
                />
             </div>
             <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-white">
                 {planName}
               </h1>
               <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
@@ -243,35 +237,35 @@ export default function CrisisTriageDashboard() {
       </main>
 
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-[#b22222]">
+            <DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold">
               <Edit className="h-5 w-5" /> แก้ไขข้อมูลเหตุการณ์
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-6 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="planName">ชื่อเหตุการณ์ / แผน MCI</Label>
+              <Label htmlFor="planName" className="font-bold">ชื่อเหตุการณ์ / แผน MCI</Label>
               <Input 
                 id="planName" 
+                className="bg-slate-50 border-slate-200"
                 value={tempPlanName} 
                 onChange={(e) => setTempPlanName(e.target.value)}
-                placeholder="เช่น เพลิงไหม้โรงเรียน..."
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="planLocation">สถานที่เกิดเหตุ</Label>
+              <Label htmlFor="planLocation" className="font-bold">สถานที่เกิดเหตุ</Label>
               <Input 
                 id="planLocation" 
+                className="bg-slate-50 border-slate-200"
                 value={tempPlanLocation} 
                 onChange={(e) => setTempPlanLocation(e.target.value)}
-                placeholder="เช่น โรงเรียนสตรีสิริเกศ"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
-            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] gap-2" onClick={handleUpdatePlan}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-200" onClick={() => setIsPlanEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2" onClick={handleUpdatePlan}>
               <Check className="h-4 w-4" /> บันทึกการเปลี่ยนแปลง
             </Button>
           </DialogFooter>
