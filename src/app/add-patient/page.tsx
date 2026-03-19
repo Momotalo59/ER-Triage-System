@@ -35,6 +35,7 @@ export default function AddPatientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get('id');
+  const planId = searchParams.get('planId'); // ดึง planId จาก URL
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -75,6 +76,7 @@ export default function AddPatientPage() {
     const patientsRef = collection(firestore, 'patients');
     const dataToSave = {
       ...formData,
+      planId: planId || formData.planId || "", // บันทึก planId ลงไปเพื่อแยกตามเหตุการณ์
       timestamp: new Date().toISOString(),
       edTriage: formData.triageLevel, // Sync triage level
     };
@@ -95,7 +97,7 @@ export default function AddPatientPage() {
       });
     }
     
-    router.push('/dashboard');
+    router.push(`/dashboard?id=${planId}`);
   };
 
   return (

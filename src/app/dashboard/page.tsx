@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
-import { Patient, ResourceSummary } from "@/lib/types";
+import { Patient, MCIPlan } from "@/lib/types";
 import { 
   Plus, 
   MapPin, 
@@ -32,26 +32,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
-import { collection, query, orderBy, doc } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking } from "@/firebase";
+import { collection, query, orderBy, doc, where } from "firebase/firestore";
 
 export default function CrisisTriageDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planId = searchParams.get('id');
   const { toast } = useToast();
   const firestore = useFirestore();
   
-  // Fetch patients from Firestore
-  const patientsRef = collection(firestore, 'patients');
-  const memoizedQuery = useMemoFirebase(() => query(patientsRef, orderBy('timestamp', 'desc')), []);
-  const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
-  
-  const patients = patientsData || [];
+  // Fetch specific plan details
+  const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId]);
+  const { data: planData } = useDoc<MCIPlan>(planDocRef);
 
+  const [planName, setPlanName] = useState("กำลังโหลดข้อมูล...");
+  const [planLocation, setPlanLocation] = useState("กำลังโหลด...");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
-  const [planName, setPlanName] = useState("เพลิงไหม้โรงเรียนสตรีสิริเกศ");
-  const [planLocation, setPlanLocation] = useState("โรงเรียนสตรีสิริเกศ");
-  const [tempPlanName, setTempPlanName] = useState(planName);
-  const [tempPlanLocation, setTempPlanLocation] = useState(planLocation);
+  const [tempPlanName, setTempPlanName] = useState("");
+  const [tempPlanLocation, setTempPlanLocation] = useState("");
+
+  useEffect(() => {
+    if (planData) {
+      setPlanName(planData.title);
+      setPlanLocation(planData.location);
+      setTempPlanName(planData.title);
+      setTempPlanLocation(planData.location);
+    }
+  }, [planData]);
+
+  // Fetch patients filtered by planId
+  const patientsRef = collection(firestore, 'patients');
+  const memoizedQuery = useMemoFirebase(() => {
+    if (planId) {
+      // In prototype, we use where to filter by plan. 
+      // Note: If adding orderBy, Firestore might require a composite index.
+      return query(patientsRef, where('planId', '==', planId), orderBy('timestamp', 'desc'));
+    }
+    return query(patientsRef, orderBy('timestamp', 'desc'));
+  }, [planId]);
+
+  const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
+  const patients = patientsData || [];
 
   const [currentDateTime, setCurrentDateTime] = useState<string>("");
 
@@ -84,12 +106,19 @@ export default function CrisisTriageDashboard() {
   };
 
   const handleUpdatePlan = () => {
+    if (planId) {
+       const docRef = doc(firestore, 'mci_plans', planId);
+       updateDocumentNonBlocking(docRef, { 
+         title: tempPlanName, 
+         location: tempPlanLocation 
+       });
+    }
     setPlanName(tempPlanName);
     setPlanLocation(tempPlanLocation);
     setIsPlanEditOpen(false);
     toast({
       title: "บันทึกสำเร็จ",
-      description: "ข้อมูลเหตุการณ์ถูกอัปเดตแล้ว",
+      description: "ข้อมูลเหตุการณ์ถูกอัปเดตในฐานข้อมูลแล้ว",
     });
   };
 
@@ -165,14 +194,14 @@ export default function CrisisTriageDashboard() {
               variant="secondary" 
               size="sm" 
               className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2"
-              onClick={() => router.push('/relative-board')}
+              onClick={() => router.push(`/relative-board?id=${planId}`)}
             >
               <Monitor className="h-4 w-4" /> บอร์ดญาติ
             </Button>
             <Button 
               size="sm" 
               className="h-8 bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-2" 
-              onClick={() => router.push('/add-patient')}
+              onClick={() => router.push(`/add-patient?planId=${planId}`)}
             >
               <Plus className="h-4 w-4" /> เพิ่มผู้ป่วย
             </Button>
@@ -215,13 +244,13 @@ export default function CrisisTriageDashboard() {
             <h2 className="font-bold flex items-center gap-2 text-white">
               <LayoutList className="h-4 w-4 text-white" /> รายชื่อผู้ป่วย ({isPatientsLoading ? '...' : patients.length} ราย)
             </h2>
-            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => router.push('/add-patient')}>
+            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => router.push(`/add-patient?planId=${planId}`)}>
               <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
             </Button>
           </div>
           <PatientTable 
             patients={patients} 
-            onEdit={(p) => router.push(`/add-patient?id=${p.id}`)} 
+            onEdit={(p) => router.push(`/add-patient?id=${p.id}&planId=${planId}`)} 
             onDelete={handleDeletePatient} 
           />
         </section>

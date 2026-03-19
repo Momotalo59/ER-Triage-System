@@ -4,6 +4,7 @@ export type PatientStatus = 'Waiting' | 'X-Ray' | 'CT' | 'Lab' | 'Admit' | 'OR' 
 
 export interface Patient {
   id: string;
+  planId?: string; // เพิ่มเพื่อระบุว่าผู้ป่วยอยู่ในแผน MCI ใด
   scene: string;
   triageLevel: TriageLevel;
   name: string;
@@ -21,6 +22,22 @@ export interface Patient {
   disp: string;
   blood: string;
   note: string;
+  timestamp: string;
+}
+
+export interface MCIPlan {
+  id: string;
+  title: string;
+  location: string;
+  date: string;
+  time: string;
+  status: 'Open' | 'Closed';
+  stats: {
+    red: number;
+    yellow: number;
+    green: number;
+    black: number;
+  };
   timestamp: string;
 }
 

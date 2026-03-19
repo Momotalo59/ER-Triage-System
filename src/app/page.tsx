@@ -20,22 +20,7 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, addDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
-
-interface MCIPlan {
-  id: string;
-  title: string;
-  location: string;
-  date: string;
-  time: string;
-  status: 'Open' | 'Closed';
-  stats: {
-    red: number;
-    yellow: number;
-    green: number;
-    black: number;
-  };
-  timestamp: string;
-}
+import { MCIPlan } from "@/lib/types";
 
 export default function MCIListPage() {
   const router = useRouter();
@@ -156,16 +141,16 @@ export default function MCIListPage() {
                   </div>
 
                   <div className="grid grid-cols-4 gap-3 mb-8">
-                    <TriageBox color="bg-[#e63946]" label="แดง" count={mci.stats.red} />
-                    <TriageBox color="bg-[#ffb703]" label="เหลือง" count={mci.stats.yellow} />
-                    <TriageBox color="bg-[#2a9d8f]" label="เขียว" count={mci.stats.green} />
-                    <TriageBox color="bg-[#212529]" label="ดำ" count={mci.stats.black} />
+                    <TriageBox color="bg-[#e63946]" label="แดง" count={mci.stats?.red || 0} />
+                    <TriageBox color="bg-[#ffb703]" label="เหลือง" count={mci.stats?.yellow || 0} />
+                    <TriageBox color="bg-[#2a9d8f]" label="เขียว" count={mci.stats?.green || 0} />
+                    <TriageBox color="bg-[#212529]" label="ดำ" count={mci.stats?.black || 0} />
                   </div>
 
                   <div className="flex justify-between items-center mt-6">
                     <div className="flex flex-col">
                       <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">จำนวนผู้ป่วย</span>
-                      <span className="text-slate-900 font-black text-xl">รวม {mci.stats.red + mci.stats.yellow + mci.stats.green + mci.stats.black} ราย</span>
+                      <span className="text-slate-900 font-black text-xl">รวม {(mci.stats?.red || 0) + (mci.stats?.yellow || 0) + (mci.stats?.green || 0) + (mci.stats?.black || 0)} ราย</span>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="icon" className="h-12 w-12 border-slate-300 bg-slate-900 rounded-xl hover:bg-slate-800">
@@ -181,7 +166,7 @@ export default function MCIListPage() {
                       </Button>
                       <Button 
                         className="bg-[#e63946] hover:bg-[#c62828] text-white gap-2 px-6 h-12 font-black rounded-xl shadow-lg shadow-red-100"
-                        onClick={() => router.push('/dashboard')}
+                        onClick={() => router.push(`/dashboard?id=${mci.id}`)}
                       >
                         <LayoutDashboard className="h-5 w-5" /> DASHBOARD
                       </Button>
