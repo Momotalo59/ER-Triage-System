@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -54,7 +55,7 @@ export default function AddPatientPage() {
     bloodPressure: '',
     heartRate: '',
     temperature: '',
-    arrival: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    arrival: '',
     disp: '-',
     blood: 'O',
     note: '',
@@ -62,6 +63,16 @@ export default function AddPatientPage() {
 
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
+
+  useEffect(() => {
+    // Set initial arrival time only on client side to avoid hydration mismatch
+    if (!patientId && !formData.arrival) {
+      setFormData(prev => ({
+        ...prev,
+        arrival: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+      }));
+    }
+  }, [patientId, formData.arrival]);
 
   useEffect(() => {
     if (existingPatient) {
@@ -169,7 +180,7 @@ export default function AddPatientPage() {
                       type="number" 
                       className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                       value={formData.age} 
-                      onChange={e => setFormData(p => ({...p, age: parseInt(e.target.value)}))} 
+                      onChange={e => setFormData(p => ({...p, age: parseInt(e.target.value) || 0}))} 
                     />
                   </div>
                   <div className="space-y-2">

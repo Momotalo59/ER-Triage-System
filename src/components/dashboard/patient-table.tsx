@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -66,7 +67,7 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
             <TableHead>Arrival</TableHead>
             <TableHead>Disp.</TableHead>
             <TableHead>เลือด</TableHead>
-            <TableHead>หมายเหตุ</TableHead>
+            <TableHead className="min-w-[150px]">หมายเหตุ</TableHead>
             <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
         </TableHeader>
@@ -82,7 +83,7 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
                    patient.triageLevel === 'Minor' ? 'เขียว' : 'ดำ'}
                 </div>
               </TableCell>
-              <TableCell>{patient.name}</TableCell>
+              <TableCell className="font-bold">{patient.name}</TableCell>
               <TableCell className="text-slate-400">{patient.hn}</TableCell>
               <TableCell>{patient.age || '-'}</TableCell>
               <TableCell>
@@ -109,7 +110,9 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
               <TableCell>{patient.arrival}</TableCell>
               <TableCell>{patient.disp}</TableCell>
               <TableCell>{patient.blood}</TableCell>
-              <TableCell className="text-slate-400">{patient.note}</TableCell>
+              <TableCell className="text-slate-600 max-w-[200px] italic">
+                {patient.note || '-'}
+              </TableCell>
               <TableCell className="text-right p-1">
                 <div className="flex justify-end gap-1">
                   <Button variant="outline" size="icon" className="h-7 w-7 text-blue-500 border-blue-200" onClick={() => onEdit(patient)}>
