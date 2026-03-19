@@ -64,16 +64,18 @@ export default function CrisisTriageDashboard() {
   // Fetch patients filtered by planId
   const patientsRef = collection(firestore, 'patients');
   const memoizedQuery = useMemoFirebase(() => {
+    // ปรับ Query ให้เรียบง่ายที่สุดเพื่อเลี่ยงปัญหา Index Permission ในช่วงแรก
     if (planId) {
-      // In prototype, we use where to filter by plan. 
-      // Note: If adding orderBy, Firestore might require a composite index.
-      return query(patientsRef, where('planId', '==', planId), orderBy('timestamp', 'desc'));
+      return query(patientsRef, where('planId', '==', planId));
     }
-    return query(patientsRef, orderBy('timestamp', 'desc'));
+    return query(patientsRef);
   }, [planId]);
 
   const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
-  const patients = patientsData || [];
+  const patients = (patientsData || []).sort((a, b) => {
+    // จัดเรียงข้อมูลใน Client side แทนเพื่อให้ Query ไม่ติดเรื่อง Index
+    return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+  });
 
   const [currentDateTime, setCurrentDateTime] = useState<string>("");
 

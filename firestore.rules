@@ -1,11 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * สำหรับช่วง Prototype: อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดโดยไม่ต้องตรวจสอบสิทธิ์
-     * เพื่อป้องกันปัญหา Permission Denied ในระหว่างการพัฒนา
-     */
+    // อนุญาตให้ทุกคน (ทั้งที่ล็อกอินและไม่ล็อกอิน) สามารถอ่านและเขียนข้อมูลได้ทั้งหมด
+    // เพื่อความสะดวกในการทำ Prototype และทดสอบระบบ MCI
     match /{document=**} {
       allow read, write: if true;
     }
