@@ -83,7 +83,11 @@ export default function MCIListPage() {
       title: newPlanTitle,
       location: newPlanLocation,
       date: now.toLocaleDateString('th-TH'),
-      time: now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      time: now.toLocaleTimeString('th-TH', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      }),
       status: 'Open',
       stats: { red: 0, yellow: 0, green: 0, black: 0 },
       timestamp: now.toISOString()

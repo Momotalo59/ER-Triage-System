@@ -65,11 +65,15 @@ export default function AddPatientPage() {
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
   useEffect(() => {
-    // Set initial arrival time only on client side to avoid hydration mismatch
+    // Set initial arrival time in 24h format only on client side to avoid hydration mismatch
     if (!patientId && !formData.arrival) {
       setFormData(prev => ({
         ...prev,
-        arrival: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+        arrival: new Date().toLocaleTimeString('th-TH', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        })
       }));
     }
   }, [patientId, formData.arrival]);
