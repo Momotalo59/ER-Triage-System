@@ -79,10 +79,13 @@ export default function MCIListPage() {
     }
   };
 
-  const handleClosePlan = (title: string) => {
+  const handleClosePlan = (id: string, title: string) => {
+    setMciList(prev => prev.map(item => 
+      item.id === id ? { ...item, status: 'Closed' } : item
+    ));
     toast({
-      title: "กำลังปิดแผน",
-      description: `สถานะของแผน ${title} กำลังถูกเปลี่ยนเป็น 'ปิดแล้ว'`,
+      title: "ปิดแผนสำเร็จ",
+      description: `สถานะของแผน ${title} ถูกเปลี่ยนเป็น 'ปิดแล้ว'`,
     });
   };
 
@@ -103,8 +106,8 @@ export default function MCIListPage() {
                />
             </div>
             <div>
-              <h1 className="text-4xl font-bold tracking-tight">ระบบอุบัติเหตุหมู่ (MCI)</h1>
-              <p className="text-lg opacity-90 mt-1 font-light">
+              <h1 className="text-4xl font-bold tracking-tight text-white">ระบบอุบัติเหตุหมู่ (MCI)</h1>
+              <p className="text-lg opacity-90 mt-1 font-light text-white">
                 Mass Casualty Incident — จุดบัญชาการเหตุการณ์ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย
               </p>
             </div>
@@ -130,12 +133,12 @@ export default function MCIListPage() {
             {mciList.map((mci) => (
               <div key={mci.id} className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-200 transition-transform hover:scale-[1.01]">
                 {/* Card Header */}
-                <div className={`${mci.status === 'Open' ? 'bg-[#b22222]' : 'bg-slate-600'} text-white p-4 flex justify-between items-center px-5`}>
+                <div className={`${mci.status === 'Open' ? 'bg-[#b22222]' : 'bg-[#4a5568]'} text-white p-4 flex justify-between items-center px-5`}>
                   <div className="flex items-center gap-3 font-bold truncate">
                     <AlertTriangle className="h-5 w-5" />
                     <span className="text-lg truncate">{mci.title}</span>
                   </div>
-                  <Badge className={`${mci.status === 'Open' ? 'bg-[#2a9d8f]' : 'bg-slate-500'} border-none text-xs font-black px-3 py-1 uppercase`}>
+                  <Badge className={`${mci.status === 'Open' ? 'bg-[#2a9d8f]' : 'bg-[#718096]'} border-none text-xs font-black px-3 py-1 uppercase text-white`}>
                     {mci.status === 'Open' ? 'เปิดอยู่' : 'ปิดแล้ว'}
                   </Badge>
                 </div>
@@ -190,8 +193,9 @@ export default function MCIListPage() {
                 <div className="border-t border-slate-100 bg-slate-50/50">
                   <Button 
                     variant="ghost" 
-                    className="w-full h-14 text-slate-400 hover:text-red-600 hover:bg-red-50 font-bold gap-2 rounded-none transition-colors"
-                    onClick={() => handleClosePlan(mci.title)}
+                    className={`w-full h-14 font-bold gap-2 rounded-none transition-colors ${mci.status === 'Open' ? 'text-slate-400 hover:text-red-600 hover:bg-red-50' : 'text-slate-300 cursor-not-allowed opacity-50'}`}
+                    onClick={() => mci.status === 'Open' && handleClosePlan(mci.id, mci.title)}
+                    disabled={mci.status === 'Closed'}
                   >
                      <XCircle className="h-5 w-5" /> ปิดแผน MCI
                   </Button>
@@ -208,8 +212,8 @@ export default function MCIListPage() {
 function TriageBox({ color, label, count }: { color: string; label: string; count: number }) {
   return (
     <div className={`${color} rounded-2xl p-4 flex flex-col items-center justify-center text-white min-h-[100px] shadow-sm`}>
-      <span className="text-4xl font-black leading-none mb-1">{count}</span>
-      <span className="text-xs font-bold opacity-80 uppercase tracking-tighter">{label}</span>
+      <span className="text-4xl font-black leading-none mb-1 text-white">{count}</span>
+      <span className="text-xs font-bold opacity-80 uppercase tracking-tighter text-white">{label}</span>
     </div>
   );
 }
