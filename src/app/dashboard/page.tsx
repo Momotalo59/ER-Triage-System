@@ -35,11 +35,11 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 
 const MOCK_PATIENTS: Patient[] = [
-  { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Ns ICU', o2: 'ETT', arrival: '10:19', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2', o2: '-', arrival: '10:28', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: 'นายสมชาย รักดี', hn: '67-0001', age: 45, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: 'A', note: '', timestamp: new Date().toISOString() },
+  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: 'นางสาววิภา ใจเย็น', hn: '67-0002', age: 28, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Ns ICU', o2: 'ETT', arrival: '10:19', disp: '-', blood: 'B', note: '', timestamp: new Date().toISOString() },
+  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: 'เด็กชายเอ นามสมมติ', hn: '67-0003', age: 10, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2', o2: '-', arrival: '10:28', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
+  { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: 'นายบุญส่ง สุขภาพดี', hn: '67-0004', age: 52, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: 'AB', note: '', timestamp: new Date().toISOString() },
+  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: 'นางมาลี มีความสุข', hn: '67-0005', age: 60, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery', o2: 'ETT', arrival: '10:34', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
 ];
 
 const MOCK_RESOURCES: ResourceSummary = {
@@ -76,13 +76,17 @@ export default function CrisisTriageDashboard() {
     };
     
     updateTime();
-    const timer = setInterval(updateTime, 15000); 
+    const timer = setInterval(updateTime, 1000); 
     return () => clearInterval(timer);
   }, []);
 
   const handleDeletePatient = (id: string) => {
     if (confirm('ยืนยันการลบข้อมูล?')) {
       setPatients(prev => prev.filter(p => p.id !== id));
+      toast({
+        title: "ลบข้อมูลสำเร็จ",
+        variant: "destructive",
+      });
     }
   };
 
@@ -99,8 +103,16 @@ export default function CrisisTriageDashboard() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.classList.add('ring-4', 'ring-[#b22222]/20');
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      element.classList.add('ring-4', 'ring-[#b22222]/20', 'rounded-lg');
       setTimeout(() => {
         element.classList.remove('ring-4', 'ring-[#b22222]/20');
       }, 2000);
@@ -182,7 +194,7 @@ export default function CrisisTriageDashboard() {
               className="h-8 bg-white text-black hover:bg-slate-100 gap-2"
               onClick={() => scrollToSection('blood-section')}
             >
-              <体积 className="h-4 w-4 text-red-600" /> หมู่เลือด
+              <Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด
             </Button>
             <Button 
               variant="secondary" 
