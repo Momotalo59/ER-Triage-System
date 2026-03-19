@@ -1,19 +1,53 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Patient, ResourceSummary } from "@/lib/types";
-import { LayoutList, Activity, Droplets, Wind, Edit } from "lucide-react";
+import { LayoutList, Activity, Droplets, Wind, Edit, Check } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface ResourceWidgetsProps {
   patients: Patient[];
   resources: ResourceSummary;
+  onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
-export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
+export function ResourceWidgets({ patients, resources, onUpdateResources }: ResourceWidgetsProps) {
+  const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
+  const [isVentEditOpen, setIsVentEditOpen] = useState(false);
+  
+  // Local state for forms
+  const [tempBlood, setTempBlood] = useState(resources.bloodInventory);
+  const [tempVent, setTempVent] = useState(resources.ventilators);
+
   const getStatusCount = (s: string) => patients.filter(p => p.status === s).length;
   const getTriageCount = (l: string) => patients.filter(p => p.triageLevel === l).length;
+
+  const handleSaveBlood = () => {
+    onUpdateResources({
+      ...resources,
+      bloodInventory: tempBlood
+    });
+    setIsBloodEditOpen(false);
+  };
+
+  const handleSaveVent = () => {
+    onUpdateResources({
+      ...resources,
+      ventilators: tempVent
+    });
+    setIsVentEditOpen(false);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -59,7 +93,15 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
             <Droplets className="h-4 w-4" />
             <CardTitle className="text-sm font-bold">หมู่เลือด</CardTitle>
           </div>
-          <Edit className="h-3.5 w-3.5 opacity-80 cursor-pointer" />
+          <button 
+            onClick={() => {
+              setTempBlood(resources.bloodInventory);
+              setIsBloodEditOpen(true);
+            }}
+            className="p-1 hover:bg-white/20 rounded transition-colors"
+          >
+            <Edit className="h-3.5 w-3.5 opacity-80" />
+          </button>
         </CardHeader>
         <CardContent className="p-4 bg-white">
           <div className="grid grid-cols-4 gap-2">
@@ -78,7 +120,15 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
             <Wind className="h-4 w-4" />
             <CardTitle className="text-sm font-bold">เครื่องช่วยหายใจ</CardTitle>
           </div>
-          <Edit className="h-3.5 w-3.5 opacity-80 cursor-pointer" />
+          <button 
+            onClick={() => {
+              setTempVent(resources.ventilators);
+              setIsVentEditOpen(true);
+            }}
+            className="p-1 hover:bg-white/20 rounded transition-colors"
+          >
+            <Edit className="h-3.5 w-3.5 opacity-80" />
+          </button>
         </CardHeader>
         <CardContent className="p-0 bg-white">
           <table className="w-full text-[11px] text-slate-900 border-collapse">
@@ -105,6 +155,85 @@ export function ResourceWidgets({ patients, resources }: ResourceWidgetsProps) {
           <div className="h-4 bg-white"></div>
         </CardContent>
       </Card>
+
+      {/* Edit Blood Dialog */}
+      <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#b22222]">
+              <Droplets className="h-5 w-5" /> แก้ไขสต็อกหมู่เลือด
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {Object.keys(tempBlood).map((type) => (
+              <div key={type} className="grid gap-2">
+                <Label htmlFor={`blood-${type}`}>หมู่เลือด {type}</Label>
+                <Input 
+                  id={`blood-${type}`}
+                  type="number"
+                  value={tempBlood[type as keyof typeof tempBlood]}
+                  onChange={(e) => setTempBlood(prev => ({
+                    ...prev,
+                    [type]: parseInt(e.target.value) || 0
+                  }))}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsBloodEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] gap-2" onClick={handleSaveBlood}>
+              <Check className="h-4 w-4" /> บันทึก
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Ventilator Dialog */}
+      <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#004d40]">
+              <Wind className="h-5 w-5" /> แก้ไขเครื่องช่วยหายใจ
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <h3 className="font-bold text-sm border-b pb-1">ห้องฉุกเฉิน (ER)</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="er-vent">Vent</Label>
+                <Input 
+                  id="er-vent"
+                  type="number"
+                  value={tempVent.er.vent}
+                  onChange={(e) => setTempVent(prev => ({
+                    ...prev,
+                    er: { ...prev.er, vent: parseInt(e.target.value) || 0 }
+                  }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="er-bird">Bird</Label>
+                <Input 
+                  id="er-bird"
+                  type="number"
+                  value={tempVent.er.bird}
+                  onChange={(e) => setTempVent(prev => ({
+                    ...prev,
+                    er: { ...prev.er, bird: parseInt(e.target.value) || 0 }
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#004d40] hover:bg-[#00332a] gap-2" onClick={handleSaveVent}>
+              <Check className="h-4 w-4" /> บันทึก
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

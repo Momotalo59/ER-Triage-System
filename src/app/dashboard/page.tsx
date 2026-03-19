@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 
-const MOCK_PATIENTS: Patient[] = [
+const INITIAL_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: 'นายสมชาย รักดี', hn: '67-0001', age: 45, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: 'A', note: '', timestamp: new Date().toISOString() },
   { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: 'นางสาววิภา ใจเย็น', hn: '67-0002', age: 28, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Ns ICU', o2: 'ETT', arrival: '10:19', disp: '-', blood: 'B', note: '', timestamp: new Date().toISOString() },
   { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: 'เด็กชายเอ นามสมมติ', hn: '67-0003', age: 10, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2', o2: '-', arrival: '10:28', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
@@ -42,7 +42,7 @@ const MOCK_PATIENTS: Patient[] = [
   { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: 'นางมาลี มีความสุข', hn: '67-0005', age: 60, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery', o2: 'ETT', arrival: '10:34', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
 ];
 
-const MOCK_RESOURCES: ResourceSummary = {
+const INITIAL_RESOURCES: ResourceSummary = {
   bloodInventory: { 'A': 84, 'B': 229, 'AB': 38, 'O': 91 },
   ventilators: {
     er: { vent: 5, bird: 2 },
@@ -53,7 +53,8 @@ const MOCK_RESOURCES: ResourceSummary = {
 export default function CrisisTriageDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
+  const [resources, setResources] = useState<ResourceSummary>(INITIAL_RESOURCES);
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   
   const [planName, setPlanName] = useState("เพลิงไหม้โรงเรียนสตรีสิริเกศ");
@@ -97,6 +98,14 @@ export default function CrisisTriageDashboard() {
     toast({
       title: "บันทึกสำเร็จ",
       description: "ข้อมูลเหตุการณ์ถูกอัปเดตแล้ว",
+    });
+  };
+
+  const handleUpdateResources = (newResources: ResourceSummary) => {
+    setResources(newResources);
+    toast({
+      title: "อัปเดตทรัพยากรสำเร็จ",
+      description: "ข้อมูลหมู่เลือดและเครื่องช่วยหายใจถูกบันทึกแล้ว",
     });
   };
 
@@ -230,7 +239,7 @@ export default function CrisisTriageDashboard() {
           />
         </section>
 
-        <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
+        <ResourceWidgets patients={patients} resources={resources} onUpdateResources={handleUpdateResources} />
       </main>
 
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
