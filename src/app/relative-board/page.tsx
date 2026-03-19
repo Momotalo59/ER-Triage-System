@@ -9,7 +9,10 @@ import {
   Users,
   MapPin,
   Clock,
-  Search
+  Search,
+  Phone,
+  CreditCard,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,9 +156,9 @@ export default function RelativeBoardPage() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <InfoCard title="ติดต่อประชาสัมพันธ์" content="053-XXX-XXXX ต่อ 0" icon="phone" />
-          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารโอเวอร์บรุ๊ค" icon="credit-card" />
-          <InfoCard title="สอบถามอาการเพิ่มเติม" content="กรุณาติดต่อเคาน์เตอร์พยาบาล" icon="info" />
+          <InfoCard title="ติดต่อประชาสัมพันธ์" content="053-910-100 ต่อ 0" icon={<Phone className="h-6 w-6" />} />
+          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารหมอกัมพล/อาคารหมอบริกส์ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย" icon={<CreditCard className="h-6 w-6" />} />
+          <InfoCard title="สอบถามอาการเพิ่มเติม" content="กรุณาติดต่อเคาน์เตอร์พยาบาล" icon={<Info className="h-6 w-6" />} />
         </div>
       </main>
 
@@ -166,15 +169,15 @@ export default function RelativeBoardPage() {
   );
 }
 
-function InfoCard({ title, content, icon }: { title: string; content: string; icon: string }) {
+function InfoCard({ title, content, icon }: { title: string; content: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 flex items-center gap-4">
-      <div className="h-12 w-12 bg-[#b22222]/10 rounded-full flex items-center justify-center text-[#b22222]">
-        <Users className="h-6 w-6" />
+    <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200 flex items-center gap-4 h-full">
+      <div className="h-12 w-12 bg-[#b22222]/10 rounded-full flex items-center justify-center text-[#b22222] shrink-0">
+        {icon}
       </div>
       <div>
         <h3 className="font-bold text-slate-900">{title}</h3>
-        <p className="text-slate-500">{content}</p>
+        <p className="text-slate-500 text-sm leading-relaxed">{content}</p>
       </div>
     </div>
   );
