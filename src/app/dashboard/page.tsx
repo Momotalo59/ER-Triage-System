@@ -32,35 +32,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-
-const INITIAL_PATIENTS: Patient[] = [
-  { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: 'นายสมชาย รักดี', hn: '67-0001', age: 45, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: 'A', note: '', timestamp: new Date().toISOString() },
-  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: 'นางสาววิภา ใจเย็น', hn: '67-0002', age: 28, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Ns ICU', o2: 'ETT', arrival: '10:19', disp: '-', blood: 'B', note: '', timestamp: new Date().toISOString() },
-  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: 'เด็กชายเอ นามสมมติ', hn: '67-0003', age: 10, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2', o2: '-', arrival: '10:28', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
-  { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: 'นายบุญส่ง สุขภาพดี', hn: '67-0004', age: 52, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: 'AB', note: '', timestamp: new Date().toISOString() },
-  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: 'นางมาลี มีความสุข', hn: '67-0005', age: 60, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery', o2: 'ETT', arrival: '10:34', disp: '-', blood: 'O', note: '', timestamp: new Date().toISOString() },
-];
-
-const INITIAL_RESOURCES: ResourceSummary = {
-  bloodInventory: { 'A': 84, 'B': 229, 'AB': 38, 'O': 91 },
-  ventilators: [
-    { id: '1', name: 'ER', vent: 5, bird: 2 },
-    { id: '2', name: 'ศูนย์ฯ', vent: 21, bird: 4 }
-  ],
-  beds: [
-    { id: '1', name: 'ER', available: 2 },
-    { id: '2', name: 'ICU', available: 5 },
-    { id: '3', name: 'Ward', available: 12 }
-  ]
-};
+import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 
 export default function CrisisTriageDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
-  const [resources, setResources] = useState<ResourceSummary>(INITIAL_RESOURCES);
-  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
+  const firestore = useFirestore();
   
+  // Fetch patients from Firestore
+  const patientsRef = collection(firestore, 'patients');
+  const memoizedQuery = useMemoFirebase(() => query(patientsRef, orderBy('timestamp', 'desc')), []);
+  const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
+  
+  const patients = patientsData || [];
+
+  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [planName, setPlanName] = useState("เพลิงไหม้โรงเรียนสตรีสิริเกศ");
   const [planLocation, setPlanLocation] = useState("โรงเรียนสตรีสิริเกศ");
   const [tempPlanName, setTempPlanName] = useState(planName);
@@ -87,7 +74,8 @@ export default function CrisisTriageDashboard() {
 
   const handleDeletePatient = (id: string) => {
     if (confirm('ยืนยันการลบข้อมูล?')) {
-      setPatients(prev => prev.filter(p => p.id !== id));
+      const docRef = doc(firestore, 'patients', id);
+      deleteDocumentNonBlocking(docRef);
       toast({
         title: "ลบข้อมูลสำเร็จ",
         variant: "destructive",
@@ -102,14 +90,6 @@ export default function CrisisTriageDashboard() {
     toast({
       title: "บันทึกสำเร็จ",
       description: "ข้อมูลเหตุการณ์ถูกอัปเดตแล้ว",
-    });
-  };
-
-  const handleUpdateResources = (newResources: ResourceSummary) => {
-    setResources(newResources);
-    toast({
-      title: "อัปเดตทรัพยากรสำเร็จ",
-      description: "ข้อมูลทรัพยากรถูกบันทึกแล้ว",
     });
   };
 
@@ -154,7 +134,7 @@ export default function CrisisTriageDashboard() {
                   <MapPin className="h-3 w-3" /> {planLocation}
                 </span>
                 <span className="flex items-center gap-1 text-yellow-300">
-                  <RefreshCw className="h-3 w-3 animate-spin-slow" /> รีเฟรชอัตโนมัติ (15 วินาที)
+                  <RefreshCw className="h-3 w-3 animate-spin-slow" /> เชื่อมต่อฐานข้อมูลจริง
                 </span>
               </div>
             </div>
@@ -233,7 +213,7 @@ export default function CrisisTriageDashboard() {
         <section className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
           <div className="bg-[#b22222] text-white px-4 py-2 flex justify-between items-center">
             <h2 className="font-bold flex items-center gap-2 text-white">
-              <LayoutList className="h-4 w-4 text-white" /> รายชื่อผู้ป่วย ({patients.length} ราย)
+              <LayoutList className="h-4 w-4 text-white" /> รายชื่อผู้ป่วย ({isPatientsLoading ? '...' : patients.length} ราย)
             </h2>
             <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => router.push('/add-patient')}>
               <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
@@ -246,7 +226,7 @@ export default function CrisisTriageDashboard() {
           />
         </section>
 
-        <ResourceWidgets patients={patients} resources={resources} onUpdateResources={handleUpdateResources} />
+        <ResourceWidgets patients={patients} />
       </main>
 
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Patient, ResourceSummary, VentilatorDept } from "@/lib/types";
 import { LayoutList, Activity, Droplets, Edit, Check, Plus, Trash2 } from "lucide-react";
@@ -16,11 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useFirestore, useDoc, setDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 interface ResourceWidgetsProps {
   patients: Patient[];
-  resources: ResourceSummary;
-  onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
 const LungsImageIcon = ({ className }: { className?: string }) => (
@@ -35,29 +35,33 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
   </div>
 );
 
-export function ResourceWidgets({ patients, resources, onUpdateResources }: ResourceWidgetsProps) {
+export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
+  const firestore = useFirestore();
+  const resourceDocRef = doc(firestore, 'resources', 'current');
+  const { data: resources } = useDoc<ResourceSummary>(resourceDocRef);
+
   const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
   const [isVentEditOpen, setIsVentEditOpen] = useState(false);
   
-  const [tempBlood, setTempBlood] = useState(resources.bloodInventory);
-  const [tempVents, setTempVents] = useState<VentilatorDept[]>(resources.ventilators);
+  const [tempBlood, setTempBlood] = useState({ 'A': 0, 'B': 0, 'AB': 0, 'O': 0 });
+  const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
+
+  useEffect(() => {
+    if (resources) {
+      setTempBlood(resources.bloodInventory || { 'A': 0, 'B': 0, 'AB': 0, 'O': 0 });
+      setTempVents(resources.ventilators || []);
+    }
+  }, [resources]);
 
   const getStatusCount = (s: string) => patients.filter(p => p.status === s).length;
   const getTriageCount = (l: string) => patients.filter(p => p.triageLevel === l).length;
 
-  const handleSaveBlood = () => {
-    onUpdateResources({
+  const handleSaveResources = (updatedResources: Partial<ResourceSummary>) => {
+    setDocumentNonBlocking(resourceDocRef, {
       ...resources,
-      bloodInventory: tempBlood
-    });
+      ...updatedResources
+    }, { merge: true });
     setIsBloodEditOpen(false);
-  };
-
-  const handleSaveVent = () => {
-    onUpdateResources({
-      ...resources,
-      ventilators: tempVents
-    });
     setIsVentEditOpen(false);
   };
 
@@ -73,8 +77,8 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
     setTempVents(tempVents.map(d => d.id === id ? { ...d, [field]: value } : d));
   };
 
-  const totalVent = resources.ventilators.reduce((sum, d) => sum + (d.vent || 0), 0);
-  const totalBird = resources.ventilators.reduce((sum, d) => sum + (d.bird || 0), 0);
+  const totalVent = (resources?.ventilators || []).reduce((sum, d) => sum + (d.vent || 0), 0);
+  const totalBird = (resources?.ventilators || []).reduce((sum, d) => sum + (d.bird || 0), 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -121,10 +125,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             <CardTitle className="text-sm font-bold text-white">หมู่เลือด</CardTitle>
           </div>
           <button 
-            onClick={() => {
-              setTempBlood(resources.bloodInventory);
-              setIsBloodEditOpen(true);
-            }}
+            onClick={() => setIsBloodEditOpen(true)}
             className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
             <Edit className="h-3 w-3 text-white" />
@@ -132,10 +133,10 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardHeader>
         <CardContent className="p-4 bg-white">
           <div className="grid grid-cols-4 gap-2">
-            <BloodItem label="A" count={resources.bloodInventory.A} />
-            <BloodItem label="B" count={resources.bloodInventory.B} />
-            <BloodItem label="AB" count={resources.bloodInventory.AB} />
-            <BloodItem label="O" count={resources.bloodInventory.O} />
+            <BloodItem label="A" count={resources?.bloodInventory?.A || 0} />
+            <BloodItem label="B" count={resources?.bloodInventory?.B || 0} />
+            <BloodItem label="AB" count={resources?.bloodInventory?.AB || 0} />
+            <BloodItem label="O" count={resources?.bloodInventory?.O || 0} />
           </div>
         </CardContent>
       </Card>
@@ -148,10 +149,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             <CardTitle className="text-sm font-bold text-white">เครื่องช่วยหายใจ</CardTitle>
           </div>
           <button 
-            onClick={() => {
-              setTempVents([...resources.ventilators]);
-              setIsVentEditOpen(true);
-            }}
+            onClick={() => setIsVentEditOpen(true)}
             className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
           >
             <Edit className="h-3 w-3 text-white" />
@@ -167,7 +165,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
               </tr>
             </thead>
             <tbody>
-              {resources.ventilators.map((dept) => (
+              {(resources?.ventilators || []).map((dept) => (
                 <tr key={dept.id}>
                   <td className="p-1.5 border border-slate-200 font-bold text-slate-700">{dept.name || 'ไม่ระบุ'}</td>
                   <td className="p-1.5 border border-slate-200 text-center text-slate-900">{dept.vent || 0}</td>
@@ -193,7 +191,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             </DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-6 py-6">
-            {Object.keys(tempBlood).map((type) => (
+            {['A', 'B', 'AB', 'O'].map((type) => (
               <div key={type} className="grid gap-2">
                 <Label htmlFor={`blood-${type}`} className="font-bold text-slate-700">หมู่เลือด {type}</Label>
                 <Input 
@@ -211,7 +209,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsBloodEditOpen(false)}>ยกเลิก</Button>
-            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2 px-6" onClick={handleSaveBlood}>
+            <Button className="bg-[#b22222] hover:bg-[#8b1a1a] text-white font-bold gap-2 px-6" onClick={() => handleSaveResources({ bloodInventory: tempBlood })}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
           </DialogFooter>
@@ -276,7 +274,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
-            <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={handleSaveVent}>
+            <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={() => handleSaveResources({ ventilators: tempVents })}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
           </DialogFooter>

@@ -1,7 +1,8 @@
+
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
   Save, 
@@ -27,10 +28,16 @@ import {
 import { Patient, TriageLevel, PatientStatus } from "@/lib/types";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
 
 export default function AddPatientPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const patientId = searchParams.get('id');
   const { toast } = useToast();
+  const firestore = useFirestore();
+
   const [formData, setFormData] = useState<Partial<Patient>>({
     name: '',
     hn: '',
@@ -52,12 +59,42 @@ export default function AddPatientPage() {
     note: '',
   });
 
+  // If editing, fetch existing patient data
+  const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
+  const { data: existingPatient } = useDoc<Patient>(patientDocRef);
+
+  useEffect(() => {
+    if (existingPatient) {
+      setFormData(existingPatient);
+    }
+  }, [existingPatient]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "ลงทะเบียนสำเร็จ",
-      description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบแล้ว`,
-    });
+    
+    const patientsRef = collection(firestore, 'patients');
+    const dataToSave = {
+      ...formData,
+      timestamp: new Date().toISOString(),
+      edTriage: formData.triageLevel, // Sync triage level
+    };
+
+    if (patientId) {
+      // Update existing
+      updateDocumentNonBlocking(doc(firestore, 'patients', patientId), dataToSave);
+      toast({
+        title: "อัปเดตข้อมูลสำเร็จ",
+        description: `แก้ไขข้อมูลผู้ป่วย ${formData.name} เรียบร้อยแล้ว`,
+      });
+    } else {
+      // Create new
+      addDocumentNonBlocking(patientsRef, dataToSave);
+      toast({
+        title: "ลงทะเบียนสำเร็จ",
+        description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบ Firestore แล้ว`,
+      });
+    }
+    
     router.push('/dashboard');
   };
 
@@ -84,7 +121,7 @@ export default function AddPatientPage() {
                />
             </div>
             <h1 className="text-xl font-bold flex items-center gap-2">
-              <UserPlus className="h-5 w-5" /> ลงทะเบียนผู้ป่วยใหม่ (MCI Registration)
+              <UserPlus className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่ (MCI Registration)'}
             </h1>
           </div>
           <Button 
@@ -315,7 +352,7 @@ export default function AddPatientPage() {
                 type="submit" 
                 className="flex-1 bg-[#b22222] hover:bg-[#8b1a1a] h-14 text-xl font-bold rounded-xl shadow-lg"
               >
-                ยืนยันการลงทะเบียน
+                {patientId ? 'ยืนยันการแก้ไข' : 'ยืนยันการลงทะเบียน'}
               </Button>
               <Button 
                 type="button" 
