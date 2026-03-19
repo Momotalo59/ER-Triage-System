@@ -4,31 +4,33 @@
 
 @layer base {
   :root {
-    --background: 345 9% 10%;
-    --foreground: 0 0% 98%;
-    --card: 345 10% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 345 10% 12%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 345 85% 43%;
+    --background: 0 0% 95%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 72% 35%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 345 15% 18%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 345 15% 18%;
-    --muted-foreground: 345 5% 70%;
-    --accent: 320 81% 66%;
-    --accent-foreground: 0 0% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 72% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 345 10% 20%;
-    --input: 345 10% 20%;
-    --ring: 320 81% 66%;
-    --radius: 0.75rem;
-    --chart-1: 345 85% 43%;
-    --chart-2: 320 81% 66%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 0 72% 35%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    /* ... rest of dark mode if needed ... */
   }
 }
 
@@ -41,17 +43,6 @@
   }
 }
 
-.data-pulse {
-  animation: pulse-border 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-border {
-  0%, 100% {
-    opacity: 1;
-    border-color: hsl(var(--primary));
-  }
-  50% {
-    opacity: 0.7;
-    border-color: hsl(var(--accent));
-  }
+.font-sarabun {
+  font-family: 'Sarabun', sans-serif;
 }

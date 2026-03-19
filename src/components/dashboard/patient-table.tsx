@@ -11,31 +11,27 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Patient, TriageLevel, PatientStatus } from "@/lib/types";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
-import { Edit2, Trash2, Clock } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const triageColors: Record<TriageLevel, string> = {
-  Critical: "bg-primary text-primary-foreground border-primary",
-  Urgent: "bg-accent text-accent-foreground border-accent",
-  Minor: "bg-secondary text-secondary-foreground border-border",
-  Deceased: "bg-muted text-muted-foreground border-muted",
+const triageColorMap: Record<TriageLevel, string> = {
+  Critical: "bg-[#e63946] text-white",
+  Urgent: "bg-[#ffb703] text-black",
+  Minor: "bg-[#2a9d8f] text-white",
+  Deceased: "bg-[#212529] text-white",
+  "Non-Urgent": "bg-slate-200 text-slate-800",
 };
 
-const triageLabels: Record<TriageLevel, string> = {
-  Critical: "วิกฤต",
-  Urgent: "เร่งด่วน",
-  Minor: "ไม่รุนแรง",
-  Deceased: "เสียชีวิต",
-};
-
-const statusLabels: Record<PatientStatus, string> = {
-  Waiting: "รอตรวจ",
-  "X-Ray": "เอกซเรย์",
-  Lab: "ส่งแล็บ",
-  Admit: "รับไว้รักษา",
-  Discharged: "จำหน่ายกลับ",
+const statusColorMap: Record<PatientStatus, string> = {
+  Waiting: "bg-slate-400 text-white",
+  "X-Ray": "bg-sky-400 text-white",
+  CT: "bg-blue-600 text-white",
+  Lab: "bg-purple-500 text-white",
+  Admit: "bg-orange-500 text-white",
+  OR: "bg-red-800 text-white",
+  "D/C": "bg-emerald-500 text-white",
+  Refer: "bg-indigo-500 text-white",
+  Dead: "bg-black text-white",
 };
 
 interface PatientTableProps {
@@ -46,71 +42,78 @@ interface PatientTableProps {
 
 export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) {
   return (
-    <div className="rounded-md border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[180px]">ชื่อผู้ป่วย</TableHead>
-            <TableHead>คัดกรอง</TableHead>
-            <TableHead>การวินิจฉัย</TableHead>
-            <TableHead>จุดส่งต่อ</TableHead>
+    <div className="overflow-x-auto">
+      <Table className="text-[13px]">
+        <TableHeader className="bg-slate-50">
+          <TableRow>
+            <TableHead className="w-10 text-center">#</TableHead>
+            <TableHead>Scene</TableHead>
+            <TableHead>Triage</TableHead>
+            <TableHead>ชื่อ-นามสกุล</TableHead>
+            <TableHead>HN</TableHead>
+            <TableHead>อายุ</TableHead>
+            <TableHead>ED Triage</TableHead>
+            <TableHead>วินิจฉัย</TableHead>
             <TableHead>สถานะ</TableHead>
-            <TableHead className="hidden md:table-cell">เวลาที่มาถึง</TableHead>
+            <TableHead>Destination</TableHead>
+            <TableHead>O2</TableHead>
+            <TableHead>Arrival</TableHead>
+            <TableHead>Disp.</TableHead>
+            <TableHead>เลือด</TableHead>
+            <TableHead>หมายเหตุ</TableHead>
             <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {patients.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                ไม่พบข้อมูลผู้ป่วยในขณะนี้
+          {patients.map((patient, idx) => (
+            <TableRow key={patient.id} className="hover:bg-slate-50/50 h-10">
+              <TableCell className="text-center text-slate-500">{idx + 1}</TableCell>
+              <TableCell className="font-medium">{patient.scene}</TableCell>
+              <TableCell>
+                <div className={`w-12 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${triageColorMap[patient.triageLevel]}`}>
+                  {patient.triageLevel === 'Critical' ? 'แดง' : 
+                   patient.triageLevel === 'Urgent' ? 'เหลือง' :
+                   patient.triageLevel === 'Minor' ? 'เขียว' : 'ดำ'}
+                </div>
+              </TableCell>
+              <TableCell>{patient.name}</TableCell>
+              <TableCell className="text-slate-400">{patient.hn}</TableCell>
+              <TableCell>{patient.age || '-'}</TableCell>
+              <TableCell>
+                 <div className={`w-8 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${triageColorMap[patient.edTriage]}`}>
+                  {patient.edTriage === 'Critical' ? 'แดง' : 'แดง'}
+                </div>
+              </TableCell>
+              <TableCell className="max-w-[150px] truncate">{patient.diagnosis}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className={`${statusColorMap[patient.status]} border-none rounded-sm px-2 py-0 h-5 text-[10px]`}>
+                  {patient.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="max-w-[200px] truncate">{patient.destination}</TableCell>
+              <TableCell>
+                {patient.o2 !== '-' ? (
+                  <Badge className="bg-cyan-400 hover:bg-cyan-500 text-white border-none rounded-sm px-1.5 py-0 h-5 text-[10px]">
+                    {patient.o2}
+                  </Badge>
+                ) : '-'}
+              </TableCell>
+              <TableCell>{patient.arrival}</TableCell>
+              <TableCell>{patient.disp}</TableCell>
+              <TableCell>{patient.blood}</TableCell>
+              <TableCell className="text-slate-400">{patient.note}</TableCell>
+              <TableCell className="text-right p-1">
+                <div className="flex justify-end gap-1">
+                  <Button variant="outline" size="icon" className="h-7 w-7 text-blue-500 border-blue-200" onClick={() => onEdit(patient)}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7 text-red-500 border-red-200" onClick={() => onDelete(patient.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
-          ) : (
-            patients.map((patient) => (
-              <TableRow key={patient.id} className="group transition-colors duration-150">
-                <TableCell className="font-medium">
-                  <div className="flex flex-col">
-                    <span>{patient.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {patient.age} ปี • {patient.gender}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={`${triageColors[patient.triageLevel]} font-semibold`}>
-                    {triageLabels[patient.triageLevel]}
-                  </Badge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate" title={patient.diagnosis}>
-                  {patient.diagnosis || "รอดำเนินการ..."}
-                </TableCell>
-                <TableCell>{patient.destination}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${patient.status === 'Waiting' ? 'bg-accent animate-pulse' : 'bg-muted-foreground'}`} />
-                    {statusLabels[patient.status]}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">
-                  <div className="flex items-center gap-1 text-xs">
-                    <Clock className="h-3 w-3" />
-                    {format(new Date(patient.timestamp), "HH:mm", { locale: th })} น.
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(patient)} className="h-8 w-8" title="แก้ไข">
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(patient.id)} className="h-8 w-8 text-destructive hover:text-destructive" title="ลบ">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>

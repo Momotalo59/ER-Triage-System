@@ -1,33 +1,35 @@
-export type TriageLevel = 'Critical' | 'Urgent' | 'Minor' | 'Deceased';
+export type TriageLevel = 'Critical' | 'Urgent' | 'Minor' | 'Deceased' | 'Non-Urgent';
 
-export type PatientStatus = 'Waiting' | 'X-Ray' | 'Lab' | 'Admit' | 'Discharged';
+export type PatientStatus = 'Waiting' | 'X-Ray' | 'CT' | 'Lab' | 'Admit' | 'OR' | 'D/C' | 'Refer' | 'Dead';
 
 export interface Patient {
   id: string;
-  name: string;
-  age: number;
-  gender: string;
-  symptoms: string;
+  scene: string;
   triageLevel: TriageLevel;
+  name: string;
+  hn: string;
+  age: number;
+  edTriage: TriageLevel;
   diagnosis: string;
-  destination: string;
   status: PatientStatus;
+  destination: string;
+  o2: string;
+  arrival: string;
+  disp: string;
+  blood: string;
+  note: string;
   timestamp: string;
 }
 
 export interface ResourceSummary {
   bloodInventory: {
-    'A+': number;
-    'B+': number;
-    'AB+': number;
-    'O+': number;
-    'A-': number;
-    'B-': number;
-    'AB-': number;
-    'O-': number;
+    'A': number;
+    'B': number;
+    'AB': number;
+    'O': number;
   };
   ventilators: {
-    total: number;
-    inUse: number;
+    er: { vent: number; bird: number };
+    center: { vent: number; bird: number };
   };
 }

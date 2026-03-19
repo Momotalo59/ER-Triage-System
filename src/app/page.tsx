@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
@@ -9,78 +8,42 @@ import { PatientFormDialog } from "@/components/dashboard/patient-form-dialog";
 import { Patient, ResourceSummary } from "@/lib/types";
 import { 
   Plus, 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  LogOut, 
-  Activity,
-  Bell,
-  Search
+  MapPin, 
+  Calendar,
+  RefreshCw,
+  LayoutList,
+  Edit,
+  Monitor,
+  Droplets,
+  Wind,
+  XCircle,
+  Printer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Toaster } from "@/components/ui/toaster";
 
 const MOCK_PATIENTS: Patient[] = [
-  {
-    id: '1',
-    name: 'สมชาย รักดี',
-    age: 45,
-    gender: 'ชาย',
-    symptoms: 'เจ็บหน้าอก หายใจลำบาก',
-    triageLevel: 'Critical',
-    diagnosis: 'สงสัยภาวะกล้ามเนื้อหัวใจขาดเลือดเฉียบพลัน',
-    destination: 'ห้องฉีดสีหัวใจ (Cath Lab)',
-    status: 'Admit',
-    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-  },
-  {
-    id: '2',
-    name: 'วิภา วงศ์วรรณ',
-    age: 28,
-    gender: 'หญิง',
-    symptoms: 'ไข้สูง ไอต่อเนื่อง',
-    triageLevel: 'Urgent',
-    diagnosis: 'ปอดอักเสบรุนแรง',
-    destination: 'วอร์ด A',
-    status: 'Waiting',
-    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-  },
-  {
-    id: '3',
-    name: 'อนันต์ สุขุม',
-    age: 62,
-    gender: 'ชาย',
-    symptoms: 'แผลฉีกขาดที่แขนขวา',
-    triageLevel: 'Minor',
-    diagnosis: 'บาดแผลเนื้อเยื่ออ่อน',
-    destination: 'หน่วยฉุกเฉิน 2',
-    status: 'X-Ray',
-    timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
-  }
+  { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Neurosurgical Intensive Care Unit (Ns ICU)', o2: 'ETT', arrival: '10:19', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2 (อ.9 เฟส2 ชั้น4)', o2: '-', arrival: '10:28', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery (อาคาร4 ชั้น3) (ยกเลิก)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '6', scene: 'แดง 7', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: '-', status: 'X-Ray', destination: '-', o2: '-', arrival: '11:02', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '7', scene: 'แดง 9', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: '-', status: 'X-Ray', destination: '-', o2: '-', arrival: '11:03', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
 ];
 
 const MOCK_RESOURCES: ResourceSummary = {
-  bloodInventory: {
-    'A+': 12, 'B+': 8, 'AB+': 4, 'O+': 24,
-    'A-': 2, 'B-': 1, 'AB-': 0, 'O-': 6
-  },
+  bloodInventory: { 'A': 84, 'B': 229, 'AB': 38, 'O': 91 },
   ventilators: {
-    total: 20,
-    inUse: 14
+    er: { vent: 5, bird: 2 },
+    center: { vent: 21, bird: 4 }
   }
 };
 
 export default function CrisisTriageDashboard() {
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-
-  const filteredPatients = patients.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.diagnosis.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddPatient = (data: Partial<Patient>) => {
     if (editingPatient) {
@@ -98,126 +61,91 @@ export default function CrisisTriageDashboard() {
   };
 
   const handleDeletePatient = (id: string) => {
-    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลผู้ป่วยรายนี้?')) {
+    if (confirm('ยืนยันการลบข้อมูล?')) {
       setPatients(prev => prev.filter(p => p.id !== id));
     }
   };
 
-  const handleEditPatient = (patient: Patient) => {
-    setEditingPatient(patient);
-    setIsDialogOpen(true);
-  };
-
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full bg-background overflow-hidden">
-        {/* Navigation Sidebar */}
-        <Sidebar className="border-r border-border/50 bg-card">
-          <SidebarHeader className="p-6 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary p-2 rounded-lg shadow-lg shadow-primary/20">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-xl font-headline font-black tracking-tight leading-none">
-                CRISIS <span className="text-primary">TRIAGE</span>
+    <div className="min-h-screen bg-[#f0f0f0] font-sarabun text-slate-900">
+      {/* Red Header Bar */}
+      <header className="bg-[#b22222] text-white p-4 shadow-md">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-white p-1 rounded">
+               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b22222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49 0 2.82.94 3.28 2.35.45 1.42-.14 2.98-1.4 3.73-1.25.75-2.88.54-3.92-.5l-.36-.36-1.59 1.59.36.36c1.04 1.04 1.25 2.67.5 3.92-.75 1.26-2.31 1.85-3.73 1.4-1.41-.46-2.35-1.79-2.35-3.28v-2.17c0-1.49-.94-2.82-2.35-3.28-1.42-.45-2.98.14-3.73 1.4-.75 1.25-.54 2.88.5 3.92l.36.36-1.59 1.59-.36-.36c-1.04-1.04-2.67-1.25-3.92-.5-1.26.75-1.85 2.31-1.4 3.73.46 1.41 1.79 2.35 3.28 2.35h2.17c1.49 0 2.82-.94 3.28-2.35.45-1.42-.14-2.98 1.4-3.73 1.25-.75 2.88-.54 3.92.5l.36.36 1.59-1.59-.36-.36c-1.04-1.04-1.25-2.67-.5-3.92.75-1.26 2.31-1.85 3.73-1.4 1.41.46 2.35 1.79 2.35 3.28v2.17z"/></svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                เพลิงไหม้โรงเรียนสตรีสิริเกศ
+                <span className="bg-emerald-500 text-[10px] px-1.5 rounded-full flex items-center gap-1">
+                  <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" /> LIVE
+                </span>
               </h1>
-            </div>
-          </SidebarHeader>
-          <SidebarContent className="p-4">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive tooltip="แผงควบคุมหลัก">
-                  <LayoutDashboard className="h-5 w-5" />
-                  <span className="font-medium">แผงควบคุม</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="รายชื่อผู้ป่วย">
-                  <Users className="h-5 w-5" />
-                  <span className="font-medium">ผู้ป่วย</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="ตั้งค่าระบบ">
-                  <Settings className="h-5 w-5" />
-                  <span className="font-medium">ตั้งค่า</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-            <div className="mt-auto p-4 absolute bottom-0 left-0 w-full">
-               <SidebarMenuButton className="text-muted-foreground hover:text-white">
-                <LogOut className="h-5 w-5" />
-                <span className="font-medium">ออกจากระบบ</span>
-              </SidebarMenuButton>
-            </div>
-          </SidebarContent>
-        </Sidebar>
-
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {/* Top Header Bar */}
-          <header className="h-16 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
-            <div className="flex items-center gap-4 flex-1 max-w-xl">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="ค้นหาชื่อผู้ป่วย, ID หรือการวินิจฉัย..." 
-                  className="pl-10 bg-secondary/30 border-none focus-visible:ring-1 ring-accent/50"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
+                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> 18/03/2569 09:15</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> โรงเรียนสตรีสิริเกศ</span>
+                <span className="flex items-center gap-1 text-yellow-300"><RefreshCw className="h-3 w-3" /> รีเฟรชใน 5 วิ</span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 bg-accent rounded-full border-2 border-card" />
-              </Button>
-              <Button 
-                onClick={() => { setEditingPatient(null); setIsDialogOpen(true); }}
-                className="bg-primary hover:bg-primary/90 text-white font-semibold flex gap-2 rounded-full px-6 shadow-xl shadow-primary/20"
-              >
-                <Plus className="h-4 w-4" />
-                รับผู้ป่วยใหม่
-              </Button>
-            </div>
-          </header>
-
-          {/* Scrollable Dashboard Grid */}
-          <div className="flex-1 overflow-y-auto p-8 space-y-8">
-            {/* KPI Overviews */}
-            <section>
-              <div className="flex items-end justify-between mb-4">
-                <h2 className="text-2xl font-headline font-bold">สรุปสถานะปัจจุบัน</h2>
-                <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                  อัปเดตล่าสุด: เมื่อสักครู่นี้
-                </div>
-              </div>
-              <KPICards patients={patients} />
-            </section>
-
-            {/* Patient Monitor List */}
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-headline font-semibold">ติดตามอาการผู้ป่วยแบบเรียลไทม์</h2>
-                <Button variant="link" size="sm" className="text-accent p-0 h-auto">ดูผู้ป่วยทั้งหมด</Button>
-              </div>
-              <PatientTable 
-                patients={filteredPatients} 
-                onEdit={handleEditPatient} 
-                onDelete={handleDeletePatient} 
-              />
-            </section>
-
-            {/* Resource Widgets Grid */}
-            <section>
-              <h2 className="text-lg font-headline font-semibold mb-4">การจัดการทรัพยากรและเวชภัณฑ์</h2>
-              <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
-            </section>
           </div>
-        </main>
-      </div>
+          
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+              <LayoutList className="h-4 w-4" /> รายการ MCI
+            </Button>
+            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+              <Edit className="h-4 w-4" /> แก้ไขชื่อแผน
+            </Button>
+            <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
+              <Monitor className="h-4 w-4" /> บอร์ดญาติ
+            </Button>
+            <Button size="sm" className="h-8 bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-2" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-4 w-4" /> เพิ่มผู้ป่วย
+            </Button>
+            <Button variant="secondary" size="sm" className="h-8 bg-white text-black hover:bg-slate-100 gap-2">
+              <Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด
+            </Button>
+            <Button variant="secondary" size="sm" className="h-8 bg-white text-black hover:bg-slate-100 gap-2">
+              <Wind className="h-4 w-4 text-slate-600" /> เครื่องช่วยหายใจ
+            </Button>
+            <Button variant="destructive" size="sm" className="h-8 gap-2">
+              <XCircle className="h-4 w-4" /> ปิดแผน
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <main className="max-w-[1600px] mx-auto p-4 space-y-4">
+        {/* KPI Section */}
+        <KPICards patients={patients} />
+
+        {/* Patient Table Section */}
+        <section className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-[#e63946] text-white px-4 py-2 flex justify-between items-center">
+            <h2 className="font-bold flex items-center gap-2">
+              <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
+            </h2>
+            <div className="flex gap-2 items-center">
+               <Button variant="outline" size="sm" className="h-7 bg-white/10 hover:bg-white/20 border-white/30 text-white gap-1">
+                <Printer className="h-3.5 w-3.5" /> Print
+              </Button>
+              <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => setIsDialogOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> เพิ่ม
+              </Button>
+            </div>
+          </div>
+          <PatientTable 
+            patients={patients} 
+            onEdit={(p) => { setEditingPatient(p); setIsDialogOpen(true); }} 
+            onDelete={handleDeletePatient} 
+          />
+        </section>
+
+        {/* Bottom Widgets */}
+        <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
+      </main>
 
       <PatientFormDialog 
         open={isDialogOpen} 
@@ -226,6 +154,6 @@ export default function CrisisTriageDashboard() {
         initialData={editingPatient}
       />
       <Toaster />
-    </SidebarProvider>
+    </div>
   );
 }
