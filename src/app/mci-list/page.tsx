@@ -83,7 +83,7 @@ export default function MCIListPage() {
             <div>
               <h1 className="text-4xl font-bold tracking-tight">ระบบอุบัติเหตุหมู่ (MCI)</h1>
               <p className="text-lg opacity-90 mt-1 font-light">
-                Mass Casualty Incident — จุดบัญชาการเหตุการณ์ โรงพยาบาลศรีสะเกษ
+                Mass Casualty Incident — จุดบัญชาการเหตุการณ์ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย
               </p>
             </div>
           </div>
