@@ -28,6 +28,12 @@ export interface VentilatorDept {
   bird: number;
 }
 
+export interface BedDept {
+  id: string;
+  name: string;
+  available: number;
+}
+
 export interface ResourceSummary {
   bloodInventory: {
     'A': number;
@@ -36,4 +42,5 @@ export interface ResourceSummary {
     'O': number;
   };
   ventilators: VentilatorDept[];
+  beds: BedDept[];
 }

@@ -46,6 +46,11 @@ const INITIAL_RESOURCES: ResourceSummary = {
   ventilators: [
     { id: '1', name: 'ER', vent: 5, bird: 2 },
     { id: '2', name: 'ศูนย์ฯ', vent: 21, bird: 4 }
+  ],
+  beds: [
+    { id: '1', name: 'ER', available: 2 },
+    { id: '2', name: 'ICU', available: 5 },
+    { id: '3', name: 'Ward', available: 12 }
   ]
 };
 

@@ -3,8 +3,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Patient, ResourceSummary, VentilatorDept } from "@/lib/types";
-import { LayoutList, Activity, Droplets, Edit, Check, Plus, Trash2 } from "lucide-react";
+import { Patient, ResourceSummary, VentilatorDept, BedDept } from "@/lib/types";
+import { LayoutList, Activity, Droplets, Edit, Check, Plus, Trash2, Bed } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,6 @@ interface ResourceWidgetsProps {
   onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
-// ไอคอนเครื่องช่วยหายใจที่ใช้รูปภาพจาก URL ที่ผู้ใช้กำหนด
 const LungsImageIcon = ({ className }: { className?: string }) => (
   <div className={`relative ${className} bg-white rounded-sm overflow-hidden flex items-center justify-center`}>
     <Image 
@@ -39,9 +38,11 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
 export function ResourceWidgets({ patients, resources, onUpdateResources }: ResourceWidgetsProps) {
   const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
   const [isVentEditOpen, setIsVentEditOpen] = useState(false);
+  const [isBedEditOpen, setIsBedEditOpen] = useState(false);
   
   const [tempBlood, setTempBlood] = useState(resources.bloodInventory);
   const [tempVents, setTempVents] = useState<VentilatorDept[]>(resources.ventilators);
+  const [tempBeds, setTempBeds] = useState<BedDept[]>(resources.beds);
 
   const getStatusCount = (s: string) => patients.filter(p => p.status === s).length;
   const getTriageCount = (l: string) => patients.filter(p => p.triageLevel === l).length;
@@ -62,23 +63,44 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
     setIsVentEditOpen(false);
   };
 
-  const handleAddDept = () => {
+  const handleSaveBed = () => {
+    onUpdateResources({
+      ...resources,
+      beds: tempBeds
+    });
+    setIsBedEditOpen(false);
+  };
+
+  const handleAddVentDept = () => {
     setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }]);
   };
 
-  const handleRemoveDept = (id: string) => {
+  const handleRemoveVentDept = (id: string) => {
     setTempVents(tempVents.filter(d => d.id !== id));
   };
 
-  const handleUpdateDept = (id: string, field: keyof VentilatorDept, value: string | number) => {
+  const handleUpdateVentDept = (id: string, field: keyof VentilatorDept, value: string | number) => {
     setTempVents(tempVents.map(d => d.id === id ? { ...d, [field]: value } : d));
+  };
+
+  const handleAddBedDept = () => {
+    setTempBeds([...tempBeds, { id: Date.now().toString(), name: '', available: 0 }]);
+  };
+
+  const handleRemoveBedDept = (id: string) => {
+    setTempBeds(tempBeds.filter(d => d.id !== id));
+  };
+
+  const handleUpdateBedDept = (id: string, field: keyof BedDept, value: string | number) => {
+    setTempBeds(tempBeds.map(d => d.id === id ? { ...d, [field]: value } : d));
   };
 
   const totalVent = resources.ventilators.reduce((sum, d) => sum + (d.vent || 0), 0);
   const totalBird = resources.ventilators.reduce((sum, d) => sum + (d.bird || 0), 0);
+  const totalBeds = resources.beds.reduce((sum, d) => sum + (d.available || 0), 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       {/* 1. สถานะผู้ป่วย */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#334155] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
@@ -141,7 +163,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardContent>
       </Card>
 
-      {/* 4. เครื่องช่วยหายใจแบบไดนามิก */}
+      {/* 4. เครื่องช่วยหายใจ */}
       <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
@@ -159,32 +181,74 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
           </button>
         </CardHeader>
         <CardContent className="p-2 bg-white">
-          <table className="w-full text-xs text-slate-900 border border-slate-200 border-collapse">
+          <table className="w-full text-[10px] text-slate-900 border border-slate-200 border-collapse">
             <thead>
               <tr className="bg-slate-50">
-                <th className="p-2 border border-slate-200 text-slate-600 font-bold"></th>
-                <th className="p-2 border border-slate-200 text-slate-600 font-bold">Vent</th>
-                <th className="p-2 border border-slate-200 text-slate-600 font-bold">Bird</th>
+                <th className="p-1.5 border border-slate-200 text-slate-600 font-bold"></th>
+                <th className="p-1.5 border border-slate-200 text-slate-600 font-bold">Vent</th>
+                <th className="p-1.5 border border-slate-200 text-slate-600 font-bold">Bird</th>
               </tr>
             </thead>
             <tbody>
               {resources.ventilators.map((dept) => (
                 <tr key={dept.id}>
-                  <td className="p-2 border border-slate-200 font-bold text-slate-700">{dept.name || 'ไม่ระบุ'}</td>
-                  <td className="p-2 border border-slate-200 text-center text-slate-900">{dept.vent || 0}</td>
-                  <td className="p-2 border border-slate-200 text-center text-slate-900">{dept.bird || 0}</td>
+                  <td className="p-1.5 border border-slate-200 font-bold text-slate-700">{dept.name || 'ไม่ระบุ'}</td>
+                  <td className="p-1.5 border border-slate-200 text-center text-slate-900">{dept.vent || 0}</td>
+                  <td className="p-1.5 border border-slate-200 text-center text-slate-900">{dept.bird || 0}</td>
                 </tr>
               ))}
               <tr className="bg-slate-100 font-bold">
-                <td className="p-2 border border-slate-200 text-slate-900">รวม</td>
-                <td className="p-2 border border-slate-200 text-center text-slate-900">{totalVent}</td>
-                <td className="p-2 border border-slate-200 text-center text-slate-900">{totalBird}</td>
+                <td className="p-1.5 border border-slate-200 text-slate-900">รวม</td>
+                <td className="p-1.5 border border-slate-200 text-center text-slate-900">{totalVent}</td>
+                <td className="p-1.5 border border-slate-200 text-center text-slate-900">{totalBird}</td>
               </tr>
             </tbody>
           </table>
         </CardContent>
       </Card>
 
+      {/* 5. จำนวนเตียงว่าง */}
+      <Card id="bed-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
+        <CardHeader className="bg-[#15803d] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
+          <div className="flex items-center gap-2">
+            <Bed className="h-4 w-4 text-white" />
+            <CardTitle className="text-sm font-bold text-white">เตียงว่าง</CardTitle>
+          </div>
+          <button 
+            onClick={() => {
+              setTempBeds([...resources.beds]);
+              setIsBedEditOpen(true);
+            }}
+            className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
+          >
+            <Edit className="h-3 w-3 text-white" />
+          </button>
+        </CardHeader>
+        <CardContent className="p-2 bg-white">
+          <table className="w-full text-[10px] text-slate-900 border border-slate-200 border-collapse">
+            <thead>
+              <tr className="bg-slate-50">
+                <th className="p-1.5 border border-slate-200 text-slate-600 font-bold">แผนก</th>
+                <th className="p-1.5 border border-slate-200 text-slate-600 font-bold">ว่าง (เตียง)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resources.beds.map((dept) => (
+                <tr key={dept.id}>
+                  <td className="p-1.5 border border-slate-200 font-bold text-slate-700">{dept.name || 'ไม่ระบุ'}</td>
+                  <td className="p-1.5 border border-slate-200 text-center text-slate-900 font-bold">{dept.available || 0}</td>
+                </tr>
+              ))}
+              <tr className="bg-slate-100 font-bold">
+                <td className="p-1.5 border border-slate-200 text-slate-900">รวมทั้งหมด</td>
+                <td className="p-1.5 border border-slate-200 text-center text-slate-900">{totalBeds}</td>
+              </tr>
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {/* Dialog แก้ไขหมู่เลือด */}
       <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -218,6 +282,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </DialogContent>
       </Dialog>
 
+      {/* Dialog แก้ไขเครื่องช่วยหายใจ */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -229,7 +294,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             {tempVents.map((dept, index) => (
               <div key={dept.id} className="space-y-4 p-4 border border-slate-100 rounded-lg relative bg-slate-50/50">
                 <button 
-                  onClick={() => handleRemoveDept(dept.id)}
+                  onClick={() => handleRemoveVentDept(dept.id)}
                   className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -240,7 +305,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
                     placeholder="เช่น ER, ICU, ศูนย์ฯ"
                     className="bg-white border-slate-200 text-slate-900"
                     value={dept.name}
-                    onChange={(e) => handleUpdateDept(dept.id, 'name', e.target.value)}
+                    onChange={(e) => handleUpdateVentDept(dept.id, 'name', e.target.value)}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -250,7 +315,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
                       type="number"
                       className="bg-white border-slate-200 text-slate-900"
                       value={dept.vent}
-                      onChange={(e) => handleUpdateDept(dept.id, 'vent', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleUpdateVentDept(dept.id, 'vent', parseInt(e.target.value) || 0)}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -259,7 +324,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
                       type="number"
                       className="bg-white border-slate-200 text-slate-900"
                       value={dept.bird}
-                      onChange={(e) => handleUpdateDept(dept.id, 'bird', parseInt(e.target.value) || 0)}
+                      onChange={(e) => handleUpdateVentDept(dept.id, 'bird', parseInt(e.target.value) || 0)}
                     />
                   </div>
                 </div>
@@ -268,7 +333,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             <Button 
               variant="outline" 
               className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12 text-slate-500"
-              onClick={handleAddDept}
+              onClick={handleAddVentDept}
             >
               <Plus className="h-4 w-4" /> เพิ่มแผนกใหม่
             </Button>
@@ -276,6 +341,61 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
           <DialogFooter className="gap-2">
             <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>
             <Button className="bg-[#1a5f7a] hover:bg-[#134458] text-white font-bold gap-2 px-6" onClick={handleSaveVent}>
+              <Check className="h-4 w-4" /> บันทึกข้อมูล
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog แก้ไขเตียงว่าง */}
+      <Dialog open={isBedEditOpen} onOpenChange={setIsBedEditOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#15803d] text-xl font-bold">
+              <Bed className="h-6 w-6 text-[#15803d]" /> แก้ไขสถานะเตียงว่าง
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {tempBeds.map((dept) => (
+              <div key={dept.id} className="space-y-4 p-4 border border-slate-100 rounded-lg relative bg-slate-50/50">
+                <button 
+                  onClick={() => handleRemoveBedDept(dept.id)}
+                  className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs text-slate-700">แผนก</Label>
+                    <Input 
+                      className="bg-white border-slate-200 text-slate-900"
+                      value={dept.name}
+                      onChange={(e) => handleUpdateBedDept(dept.id, 'name', e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs text-slate-700">เตียงว่าง</Label>
+                    <Input 
+                      type="number"
+                      className="bg-white border-slate-200 text-slate-900"
+                      value={dept.available}
+                      onChange={(e) => handleUpdateBedDept(dept.id, 'available', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12 text-slate-500"
+              onClick={handleAddBedDept}
+            >
+              <Plus className="h-4 w-4" /> เพิ่มแผนกใหม่
+            </Button>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setIsBedEditOpen(false)}>ยกเลิก</Button>
+            <Button className="bg-[#15803d] hover:bg-[#14532d] text-white font-bold gap-2 px-6" onClick={handleSaveBed}>
               <Check className="h-4 w-4" /> บันทึกข้อมูล
             </Button>
           </DialogFooter>
