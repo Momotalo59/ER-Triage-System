@@ -66,6 +66,13 @@ function AddPatientContent() {
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
+  // ลิงก์ planId จาก URL เข้ากับ formData ทันทีที่โหลดหน้าจอ
+  useEffect(() => {
+    if (planIdFromUrl) {
+      setFormData(prev => ({ ...prev, planId: planIdFromUrl }));
+    }
+  }, [planIdFromUrl]);
+
   useEffect(() => {
     if (!patientId && !formData.arrival) {
       setFormData(prev => ({
@@ -91,12 +98,12 @@ function AddPatientContent() {
       e.stopPropagation();
     }
     
-    const patientsRef = collection(firestore, 'patients');
-    const finalPlanId = planIdFromUrl || formData.planId || "";
+    // ดึงค่า planId ล่าสุดเพื่อให้แน่ใจว่าไม่ว่างเปล่า
+    const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
       ...formData,
-      planId: finalPlanId,
+      planId: currentPlanId,
       timestamp: formData.timestamp || new Date().toISOString(),
       edTriage: formData.triageLevel,
     };
@@ -108,16 +115,16 @@ function AddPatientContent() {
         description: `แก้ไขข้อมูลผู้ป่วย ${formData.name} เรียบร้อยแล้ว`,
       });
     } else {
-      addDocumentNonBlocking(patientsRef, dataToSave);
+      addDocumentNonBlocking(collection(firestore, 'patients'), dataToSave);
       toast({
         title: "ลงทะเบียนสำเร็จ",
         description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบแล้ว`,
       });
     }
     
-    // นำทางกลับทันทีหลังจากบันทึกแบบ Non-blocking
-    if (finalPlanId) {
-      router.push(`/dashboard?id=${finalPlanId}`);
+    // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
+    if (currentPlanId) {
+      router.replace(`/dashboard?id=${currentPlanId}`);
     } else {
       router.back();
     }
@@ -145,12 +152,12 @@ function AddPatientContent() {
                  className="object-contain"
                />
             </div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
+            <h1 className="text-xl font-bold flex items-center gap-2 text-white">
               <UserPlus className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่'}
             </h1>
           </div>
           <Button 
-            className="bg-white text-[#b22222] hover:bg-slate-100 font-bold gap-2 rounded-lg"
+            className="bg-white text-[#b22222] hover:bg-slate-100 font-bold gap-2 rounded-lg h-9"
             onClick={handleSubmit}
           >
             <Save className="h-4 w-4" /> บันทึกข้อมูล
