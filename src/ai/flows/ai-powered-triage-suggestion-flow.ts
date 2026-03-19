@@ -37,6 +37,7 @@ export async function getTriageSuggestion(
 
 const triageSuggestionPrompt = ai.definePrompt({
   name: 'triageSuggestionPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: {schema: TriageSuggestionInputSchema},
   output: {schema: TriageSuggestionOutputSchema},
   prompt: `คุณคือผู้เชี่ยวชาญด้านการคัดกรองผู้ป่วย (Triage Specialist) วิเคราะห์อาการผู้ป่วยต่อไปนี้ แล้วแนะนำระดับความรุนแรง (Critical, Urgent, Minor หรือ Deceased) พร้อมระบุเหตุผลสั้นๆ เป็นภาษาไทย
