@@ -3,8 +3,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Patient, ResourceSummary } from "@/lib/types";
-import { LayoutList, Activity, Droplets, Edit, Check } from "lucide-react";
+import { Patient, ResourceSummary, VentilatorDept } from "@/lib/types";
+import { LayoutList, Activity, Droplets, Edit, Check, Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,6 @@ interface ResourceWidgetsProps {
   onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
-// Custom Lungs Icon for the Ventilator widget
 const LungsIcon = ({ className }: { className?: string }) => (
   <svg 
     viewBox="0 0 24 24" 
@@ -43,7 +42,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
   const [isVentEditOpen, setIsVentEditOpen] = useState(false);
   
   const [tempBlood, setTempBlood] = useState(resources.bloodInventory);
-  const [tempVent, setTempVent] = useState(resources.ventilators);
+  const [tempVents, setTempVents] = useState<VentilatorDept[]>(resources.ventilators);
 
   const getStatusCount = (s: string) => patients.filter(p => p.status === s).length;
   const getTriageCount = (l: string) => patients.filter(p => p.triageLevel === l).length;
@@ -59,14 +58,25 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
   const handleSaveVent = () => {
     onUpdateResources({
       ...resources,
-      ventilators: tempVent
+      ventilators: tempVents
     });
     setIsVentEditOpen(false);
   };
 
-  // Calculation for total ventilators
-  const totalVent = (resources.ventilators?.er?.vent || 0) + (resources.ventilators?.center?.vent || 0);
-  const totalBird = (resources.ventilators?.er?.bird || 0) + (resources.ventilators?.center?.bird || 0);
+  const handleAddDept = () => {
+    setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }]);
+  };
+
+  const handleRemoveDept = (id: string) => {
+    setTempVents(tempVents.filter(d => d.id !== id));
+  };
+
+  const handleUpdateDept = (id: string, field: keyof VentilatorDept, value: string | number) => {
+    setTempVents(tempVents.map(d => d.id === id ? { ...d, [field]: value } : d));
+  };
+
+  const totalVent = resources.ventilators.reduce((sum, d) => sum + (d.vent || 0), 0);
+  const totalBird = resources.ventilators.reduce((sum, d) => sum + (d.bird || 0), 0);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -132,7 +142,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardContent>
       </Card>
 
-      {/* 4. เครื่องช่วยหายใจ (ปรับปรุงใหม่ตามรูปภาพ) */}
+      {/* 4. เครื่องช่วยหายใจแบบไดนามิก */}
       <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
@@ -141,7 +151,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
           </div>
           <button 
             onClick={() => {
-              setTempVent(resources.ventilators);
+              setTempVents([...resources.ventilators]);
               setIsVentEditOpen(true);
             }}
             className="p-1 hover:bg-white/20 rounded-md transition-colors border border-white/40"
@@ -159,16 +169,13 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="p-2 border border-slate-200 font-bold">ER</td>
-                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.er?.vent || 0}</td>
-                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.er?.bird || 0}</td>
-              </tr>
-              <tr>
-                <td className="p-2 border border-slate-200 font-bold">ศูนย์ฯ</td>
-                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.center?.vent || 0}</td>
-                <td className="p-2 border border-slate-200 text-center">{resources.ventilators?.center?.bird || 0}</td>
-              </tr>
+              {resources.ventilators.map((dept) => (
+                <tr key={dept.id}>
+                  <td className="p-2 border border-slate-200 font-bold">{dept.name || 'ไม่ระบุ'}</td>
+                  <td className="p-2 border border-slate-200 text-center">{dept.vent || 0}</td>
+                  <td className="p-2 border border-slate-200 text-center">{dept.bird || 0}</td>
+                </tr>
+              ))}
               <tr className="bg-slate-100 font-bold">
                 <td className="p-2 border border-slate-200">รวม</td>
                 <td className="p-2 border border-slate-200 text-center">{totalVent}</td>
@@ -179,7 +186,6 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </CardContent>
       </Card>
 
-      {/* Edit Blood Dialog */}
       <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -213,78 +219,60 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         </DialogContent>
       </Dialog>
 
-      {/* Edit Ventilator Dialog (ปรับปรุงใหม่ให้แก้ไขได้ทั้ง 2 ส่วน) */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
-        <DialogContent className="sm:max-w-[450px] bg-white text-slate-900 border-slate-200">
+        <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold">
               <LungsIcon className="h-6 w-6" /> แก้ไขเครื่องช่วยหายใจ
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="space-y-4">
-              <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2">ห้องฉุกเฉิน (ER)</h3>
-              <div className="grid grid-cols-2 gap-4">
+            {tempVents.map((dept, index) => (
+              <div key={dept.id} className="space-y-4 p-4 border border-slate-100 rounded-lg relative bg-slate-50/50">
+                <button 
+                  onClick={() => handleRemoveDept(dept.id)}
+                  className="absolute top-2 right-2 text-slate-400 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
                 <div className="grid gap-2">
-                  <Label htmlFor="er-vent" className="font-bold text-xs">Vent</Label>
+                  <Label className="font-bold text-xs">ชื่อแผนก/หน่วยงาน</Label>
                   <Input 
-                    id="er-vent"
-                    type="number"
-                    className="bg-slate-50 border-slate-200"
-                    value={tempVent.er.vent}
-                    onChange={(e) => setTempVent(prev => ({
-                      ...prev,
-                      er: { ...prev.er, vent: parseInt(e.target.value) || 0 }
-                    }))}
+                    placeholder="เช่น ER, ICU, ศูนย์ฯ"
+                    className="bg-white border-slate-200"
+                    value={dept.name}
+                    onChange={(e) => handleUpdateDept(dept.id, 'name', e.target.value)}
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="er-bird" className="font-bold text-xs">Bird</Label>
-                  <Input 
-                    id="er-bird"
-                    type="number"
-                    className="bg-slate-50 border-slate-200"
-                    value={tempVent.er.bird}
-                    onChange={(e) => setTempVent(prev => ({
-                      ...prev,
-                      er: { ...prev.er, bird: parseInt(e.target.value) || 0 }
-                    }))}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2">ศูนย์บริหารทรัพยากร (ศูนย์ฯ)</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="center-vent" className="font-bold text-xs">Vent</Label>
-                  <Input 
-                    id="center-vent"
-                    type="number"
-                    className="bg-slate-50 border-slate-200"
-                    value={tempVent.center.vent}
-                    onChange={(e) => setTempVent(prev => ({
-                      ...prev,
-                      center: { ...prev.center, vent: parseInt(e.target.value) || 0 }
-                    }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="center-bird" className="font-bold text-xs">Bird</Label>
-                  <Input 
-                    id="center-bird"
-                    type="number"
-                    className="bg-slate-50 border-slate-200"
-                    value={tempVent.center.bird}
-                    onChange={(e) => setTempVent(prev => ({
-                      ...prev,
-                      center: { ...prev.center, bird: parseInt(e.target.value) || 0 }
-                    }))}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs">Vent (เครื่อง)</Label>
+                    <Input 
+                      type="number"
+                      className="bg-white border-slate-200"
+                      value={dept.vent}
+                      onChange={(e) => handleUpdateDept(dept.id, 'vent', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="font-bold text-xs">Bird (เครื่อง)</Label>
+                    <Input 
+                      type="number"
+                      className="bg-white border-slate-200"
+                      value={dept.bird}
+                      onChange={(e) => handleUpdateDept(dept.id, 'bird', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed border-2 hover:bg-slate-50 gap-2 h-12"
+              onClick={handleAddDept}
+            >
+              <Plus className="h-4 w-4" /> เพิ่มแผนกใหม่
+            </Button>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" className="border-slate-200" onClick={() => setIsVentEditOpen(false)}>ยกเลิก</Button>

@@ -44,10 +44,10 @@ const INITIAL_PATIENTS: Patient[] = [
 
 const INITIAL_RESOURCES: ResourceSummary = {
   bloodInventory: { 'A': 84, 'B': 229, 'AB': 38, 'O': 91 },
-  ventilators: {
-    er: { vent: 5, bird: 2 },
-    center: { vent: 21, bird: 4 }
-  }
+  ventilators: [
+    { id: '1', name: 'ER', vent: 5, bird: 2 },
+    { id: '2', name: 'ศูนย์ฯ', vent: 21, bird: 4 }
+  ]
 };
 
 export default function CrisisTriageDashboard() {
@@ -105,7 +105,7 @@ export default function CrisisTriageDashboard() {
     setResources(newResources);
     toast({
       title: "อัปเดตทรัพยากรสำเร็จ",
-      description: "ข้อมูลหมู่เลือดและเครื่องช่วยหายใจถูกบันทึกแล้ว",
+      description: "ข้อมูลทรัพยากรถูกบันทึกแล้ว",
     });
   };
 
@@ -219,7 +219,7 @@ export default function CrisisTriageDashboard() {
         <KPICards patients={patients} />
 
         <section className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-          <div className="bg-[#e63946] text-white px-4 py-2 flex justify-between items-center">
+          <div className="bg-[#b22222] text-white px-4 py-2 flex justify-between items-center">
             <h2 className="font-bold flex items-center gap-2">
               <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
             </h2>
@@ -237,7 +237,6 @@ export default function CrisisTriageDashboard() {
         <ResourceWidgets patients={patients} resources={resources} onUpdateResources={handleUpdateResources} />
       </main>
 
-      {/* บังคับพื้นหลังขาวสำหรับ Dialog แก้ไขชื่อแผน */}
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>

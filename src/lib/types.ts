@@ -21,6 +21,13 @@ export interface Patient {
   timestamp: string;
 }
 
+export interface VentilatorDept {
+  id: string;
+  name: string;
+  vent: number;
+  bird: number;
+}
+
 export interface ResourceSummary {
   bloodInventory: {
     'A': number;
@@ -28,8 +35,5 @@ export interface ResourceSummary {
     'AB': number;
     'O': number;
   };
-  ventilators: {
-    er: { vent: number; bird: number };
-    center: { vent: number; bird: number };
-  };
+  ventilators: VentilatorDept[];
 }
