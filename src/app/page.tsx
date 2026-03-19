@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Plus, 
   Calendar, 
@@ -42,7 +43,6 @@ import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { MCIPlan, Patient } from "@/lib/types";
 
-// แยก Component สำหรับแสดงผลตัวเลขเพื่อลดภาระการ Render
 const TriageBox = React.memo(function TriageBox({ color, label, count }: { color: string; label: string; count: number }) {
   return (
     <div className={`${color} rounded-2xl p-4 flex flex-col items-center justify-center text-white min-h-[100px] shadow-sm`}>
@@ -57,12 +57,10 @@ export default function MCIListPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  // Fetch MCI Plans
   const mciPlansRef = collection(firestore, 'mci_plans');
   const plansQuery = useMemoFirebase(() => query(mciPlansRef, orderBy('timestamp', 'desc')), []);
   const { data: mciPlans, isLoading: isPlansLoading } = useCollection<MCIPlan>(plansQuery);
 
-  // Fetch all patients for stats
   const patientsRef = collection(firestore, 'patients');
   const patientsQuery = useMemoFirebase(() => query(patientsRef), []);
   const { data: allPatients, isLoading: isPatientsLoading } = useCollection<Patient>(patientsQuery);
@@ -73,7 +71,6 @@ export default function MCIListPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<{ id: string, title: string } | null>(null);
 
-  // คำนวณสถิติแบบระบุผลลัพธ์เฉพาะจุด (Optimized Map)
   const planStatsMap = useMemo(() => {
     const map: Record<string, { red: number; yellow: number; green: number; black: number; total: number }> = {};
     if (!allPatients) return map;
@@ -180,7 +177,7 @@ export default function MCIListPage() {
       </header>
 
       <main className="max-w-[1600px] mx-auto p-8">
-        {isPlansLoading ? (
+        {(isPlansLoading || isPatientsLoading) ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
             <p className="text-slate-500 font-medium">กำลังโหลดข้อมูลแผนงาน...</p>
@@ -233,12 +230,14 @@ export default function MCIListPage() {
                       </div>
                       <div className="flex gap-2">
                         <Button 
+                          asChild
                           variant="outline" 
                           size="icon" 
                           className="h-12 w-12 border-slate-300 bg-slate-900 rounded-xl hover:bg-slate-800"
-                          onClick={() => router.push(`/dashboard?id=${mci.id}`)}
                         >
-                          <Edit className="h-6 w-6 text-white" />
+                          <Link href={`/dashboard?id=${mci.id}`}>
+                            <Edit className="h-6 w-6 text-white" />
+                          </Link>
                         </Button>
                         <Button 
                           variant="outline" 
@@ -249,10 +248,12 @@ export default function MCIListPage() {
                           <Trash2 className="h-6 w-6 text-red-600" />
                         </Button>
                         <Button 
+                          asChild
                           className="bg-[#e63946] hover:bg-[#c62828] text-white gap-2 px-6 h-12 font-black rounded-xl shadow-lg shadow-red-100"
-                          onClick={() => router.push(`/dashboard?id=${mci.id}`)}
                         >
-                          <LayoutDashboard className="h-5 w-5" /> บอร์ดหลัก
+                          <Link href={`/dashboard?id=${mci.id}`}>
+                            <LayoutDashboard className="h-5 w-5" /> บอร์ดหลัก
+                          </Link>
                         </Button>
                       </div>
                     </div>
@@ -275,7 +276,6 @@ export default function MCIListPage() {
         )}
       </main>
 
-      {/* Pop-up สำหรับสร้างแผนใหม่ */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -314,7 +314,6 @@ export default function MCIListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Pop-up ยืนยันการลบแผน */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="bg-white text-slate-900 border-slate-200">
           <AlertDialogHeader>

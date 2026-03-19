@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
@@ -68,7 +69,6 @@ const LungsImageIcon = ({ className }: { className?: string }) => (
   </div>
 );
 
-// แยกส่วน Dashboard Content ออกมาเพื่อใช้ Suspense
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -130,22 +130,14 @@ function DashboardContent() {
     toast({ title: "บันทึกสำเร็จ", description: "อัปเดตทรัพยากรเรียบร้อย" });
   };
 
-  const navigateToRelativeBoard = () => {
-    if (planId) {
-      router.push(`/relative-board?id=${planId}`);
-    } else {
-      router.push('/relative-board');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900">
       <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-md w-12 h-12 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+            <Link href="/" className="bg-white p-1 rounded-md w-12 h-12 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
                <Image src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" alt="Logo" width={48} height={48} className="object-contain" priority />
-            </div>
+            </Link>
             <div>
               <h1 className="text-xl font-bold truncate max-w-[300px]">{planData?.title || "MCI System"}</h1>
               <div className="flex items-center gap-3 opacity-90">
@@ -156,13 +148,35 @@ function DashboardContent() {
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => router.push('/')}><LayoutList className="h-3.5 w-3.5" /> รายการ MCI</Button>
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => setIsPlanEditOpen(true)}><Edit className="h-3.5 w-3.5" /> แก้ไขชื่อแผน</Button>
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={navigateToRelativeBoard}><Monitor className="h-3.5 w-3.5" /> บอร์ดญาติ</Button>
-            <Button size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-1.5 h-8 text-[11px]" onClick={() => router.push(`/add-patient?planId=${planId}`)}><Plus className="h-3.5 w-3.5" /> เพิ่มผู้ป่วย</Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsBloodEditOpen(true)}><Droplets className="h-3.5 w-3.5 text-red-600" /> หมู่เลือด</Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsVentEditOpen(true)}><LungsImageIcon className="h-3.5 w-3.5" /> เครื่องช่วยหายใจ</Button>
-            <Button variant="destructive" size="sm" className="h-8 gap-1.5 text-[11px]" onClick={() => router.push('/')}><XCircle className="h-3.5 w-3.5" /> ปิดแผน</Button>
+            <Button asChild variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]">
+              <Link href="/">
+                <LayoutList className="h-3.5 w-3.5" /> รายการ MCI
+              </Link>
+            </Button>
+            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => setIsPlanEditOpen(true)}>
+              <Edit className="h-3.5 w-3.5" /> แก้ไขชื่อแผน
+            </Button>
+            <Button asChild variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]">
+              <Link href={planId ? `/relative-board?id=${planId}` : '/relative-board'}>
+                <Monitor className="h-3.5 w-3.5" /> บอร์ดญาติ
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-1.5 h-8 text-[11px]">
+              <Link href={`/add-patient?planId=${planId}`}>
+                <Plus className="h-3.5 w-3.5" /> เพิ่มผู้ป่วย
+              </Link>
+            </Button>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsBloodEditOpen(true)}>
+              <Droplets className="h-3.5 w-3.5 text-red-600" /> หมู่เลือด
+            </Button>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsVentEditOpen(true)}>
+              <LungsImageIcon className="h-3.5 w-3.5" /> เครื่องช่วยหายใจ
+            </Button>
+            <Button asChild variant="destructive" size="sm" className="h-8 gap-1.5 text-[11px]">
+              <Link href="/">
+                <XCircle className="h-3.5 w-3.5" /> ปิดแผน
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -211,7 +225,7 @@ function DashboardContent() {
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold"><LungsImageIcon className="h-6 w-6" /> เครื่องช่วยหายใจ</DialogTitle></DialogHeader>
           <div className="space-y-6 py-4">
-            {tempVents.map((dept, idx) => (
+            {tempVents.map((dept) => (
               <div key={dept.id} className="space-y-4 p-4 border rounded-lg relative bg-slate-50">
                 <button onClick={() => setTempVents(tempVents.filter(d => d.id !== dept.id))} className="absolute top-2 right-2 text-slate-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
                 <div className="grid gap-2"><Label className="text-xs font-bold">ชื่อแผนก</Label><Input value={dept.name} onChange={(e) => setTempVents(tempVents.map(d => d.id === dept.id ? {...d, name: e.target.value} : d))} /></div>
