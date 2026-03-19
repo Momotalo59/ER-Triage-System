@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
 import { ResourceWidgets } from "@/components/dashboard/resource-widgets";
-import { PatientFormDialog } from "@/components/dashboard/patient-form-dialog";
 import { Patient, ResourceSummary } from "@/lib/types";
 import { 
   Plus, 
@@ -37,10 +36,10 @@ import { useToast } from "@/hooks/use-toast";
 
 const MOCK_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Neurosurgical Intensive Care Unit (Ns ICU)', o2: 'ETT', arrival: '10:19', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2 (อ.9 เฟส2 ชั้น4)', o2: '-', arrival: '10:28', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Ns ICU', o2: 'ETT', arrival: '10:19', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2', o2: '-', arrival: '10:28', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
   { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery (อาคาร4 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
 ];
 
 const MOCK_RESOURCES: ResourceSummary = {
@@ -55,9 +54,7 @@ export default function CrisisTriageDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
-  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   
   const [planName, setPlanName] = useState("เพลิงไหม้โรงเรียนสตรีสิริเกศ");
   const [planLocation, setPlanLocation] = useState("โรงเรียนสตรีสิริเกศ");
@@ -79,27 +76,9 @@ export default function CrisisTriageDashboard() {
     };
     
     updateTime();
-    const timer = setInterval(() => {
-      updateTime();
-    }, 15000); 
-
+    const timer = setInterval(updateTime, 15000); 
     return () => clearInterval(timer);
   }, []);
-
-  const handleAddPatient = (data: Partial<Patient>) => {
-    if (editingPatient) {
-      setPatients(prev => prev.map(p => p.id === editingPatient.id ? { ...p, ...data } as Patient : p));
-      setEditingPatient(null);
-    } else {
-      const newPatient: Patient = {
-        ...data as any,
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: new Date().toISOString(),
-      };
-      setPatients(prev => [newPatient, ...prev]);
-    }
-    setIsDialogOpen(false);
-  };
 
   const handleDeletePatient = (id: string) => {
     if (confirm('ยืนยันการลบข้อมูล?')) {
@@ -174,7 +153,11 @@ export default function CrisisTriageDashboard() {
             <Button variant="secondary" size="sm" className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2">
               <Monitor className="h-4 w-4" /> บอร์ดญาติ
             </Button>
-            <Button size="sm" className="h-8 bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-2" onClick={() => setIsDialogOpen(true)}>
+            <Button 
+              size="sm" 
+              className="h-8 bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-2" 
+              onClick={() => router.push('/add-patient')}
+            >
               <Plus className="h-4 w-4" /> เพิ่มผู้ป่วย
             </Button>
             <Button variant="secondary" size="sm" className="h-8 bg-white text-black hover:bg-slate-100 gap-2">
@@ -198,29 +181,19 @@ export default function CrisisTriageDashboard() {
             <h2 className="font-bold flex items-center gap-2">
               <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
             </h2>
-            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => {
-              setEditingPatient(null);
-              setIsDialogOpen(true);
-            }}>
+            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => router.push('/add-patient')}>
               <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
             </Button>
           </div>
           <PatientTable 
             patients={patients} 
-            onEdit={(p) => { setEditingPatient(p); setIsDialogOpen(true); }} 
+            onEdit={(p) => router.push(`/add-patient?id=${p.id}`)} 
             onDelete={handleDeletePatient} 
           />
         </section>
 
         <ResourceWidgets patients={patients} resources={MOCK_RESOURCES} />
       </main>
-
-      <PatientFormDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        onSubmit={handleAddPatient}
-        initialData={editingPatient}
-      />
 
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
         <DialogContent className="sm:max-w-[425px]">
