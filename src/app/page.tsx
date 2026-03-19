@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 const MOCK_PATIENTS: Patient[] = [
   { id: '1', scene: 'แดง 1', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Acute psychosis', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', o2: '-', arrival: '10:04', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
@@ -50,6 +51,7 @@ const MOCK_RESOURCES: ResourceSummary = {
 };
 
 export default function CrisisTriageDashboard() {
+  const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
@@ -72,11 +74,19 @@ export default function CrisisTriageDashboard() {
       const year = now.getFullYear() + 543; // Buddhist Era
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
-      setCurrentDateTime(`${day}/${month}/${year} ${hours}:${minutes}`);
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      setCurrentDateTime(`${day}/${month}/${year} ${hours}:${minutes}:${seconds}`);
     };
     
     updateTime();
-    const timer = setInterval(updateTime, 60000); // Update every minute
+    
+    // Auto Refresh every 15 seconds
+    const timer = setInterval(() => {
+      updateTime();
+      // Simulate data refresh notification (Optional)
+      console.log("Auto-refreshed at:", new Date().toLocaleTimeString());
+    }, 15000); 
+
     return () => clearInterval(timer);
   }, []);
 
@@ -105,6 +115,10 @@ export default function CrisisTriageDashboard() {
     setPlanName(tempPlanName);
     setPlanLocation(tempPlanLocation);
     setIsPlanEditOpen(false);
+    toast({
+      title: "บันทึกสำเร็จ",
+      description: "ข้อมูลเหตุการณ์ถูกอัปเดตแล้ว",
+    });
   };
 
   return (
@@ -126,9 +140,6 @@ export default function CrisisTriageDashboard() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 {planName}
-                <span className="bg-emerald-500 text-[10px] px-1.5 rounded-full flex items-center gap-1">
-                  <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse" /> สด
-                </span>
               </h1>
               <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
                 <span className="flex items-center gap-1">
@@ -138,7 +149,7 @@ export default function CrisisTriageDashboard() {
                   <MapPin className="h-3 w-3" /> {planLocation}
                 </span>
                 <span className="flex items-center gap-1 text-yellow-300">
-                  <RefreshCw className="h-3 w-3 animate-spin-slow" /> รีเฟรชอัตโนมัติ
+                  <RefreshCw className="h-3 w-3 animate-spin-slow" /> รีเฟรชอัตโนมัติ (15 วินาที)
                 </span>
               </div>
             </div>
