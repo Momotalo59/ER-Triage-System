@@ -1,0 +1,134 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset implements a Database Access Control (DBAC) model for a crisis triage system. 
+     * Access is governed by explicit role assignments stored in the 'medical_staff' and 'admins' 
+     * collections. The existence of a document corresponding to a user's UID in these collections 
+     * serves as the source of truth for their permissions.
+     *
+     * DATA STRUCTURE
+     * - /patients: Core patient records.
+     * - /triage_statuses: Reference data for criticality levels.
+     * - /blood_products & /ventilators: Inventory and equipment management.
+     * - /medical_staff & /admins: Role-based access control markers.
+     *
+     * KEY SECURITY DECISIONS
+     * - Existence Over Content: Rules verify if a user ID exists in a role collection rather than 
+     *   checking fields within a user document, ensuring high performance and simple logic.
+     * - Role-Based Segregation: Standard medical staff have full access to operational data 
+     *   (patients, inventory), while only admins can modify reference data (triage statuses) 
+     *   or manage other users.
+     * - Prototyping Flexibility: Data schemas are not strictly enforced to allow for rapid 
+     *   UI/UX iteration, focusing entirely on secure authorization.
+     */
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the user is registered as medical staff. */
+    function isMedicalStaff() {
+      return isSignedIn() && exists(/databases/$(database)/documents/medical_staff/$(request.auth.uid));
+    }
+
+    /** @description Checks if the user is registered as an administrator. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    /** @description Checks if the user has either medical staff or admin privileges. */
+    function isAuthorizedUser() {
+      return isMedicalStaff() || isAdmin();
+    }
+
+    /** @description Ensures the document exists before performing a destructive or state-changing operation. */
+    function documentExists() {
+      return resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Access control for patient records. Authorized staff can manage all patients.
+     * @path /patients/{patientId}
+     * @allow (get) If user is authenticated and is a medical staff or admin.
+     * @deny (create) If user is not in the medical_staff or admins collection.
+     * @principle DBAC-based authorization for operational data.
+     */
+    match /patients/{patientId} {
+      allow get, list: if isAuthorizedUser();
+      allow create: if isAuthorizedUser() && request.resource.data.id == patientId;
+      allow update, delete: if isAuthorizedUser() && documentExists();
+    }
+
+    /**
+     * @description Reference data for triage levels. Read-only for staff, write for admins.
+     * @path /triage_statuses/{triageStatusId}
+     * @allow (list) If user is an authorized staff member.
+     * @deny (update) If user is medical staff but not an admin.
+     * @principle Separation of concerns: Reference data is immutable for standard users.
+     */
+    match /triage_statuses/{triageStatusId} {
+      allow get, list: if isAuthorizedUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Management of blood product inventory.
+     * @path /blood_products/{bloodProductId}
+     * @allow (update) If user is authorized medical staff.
+     * @deny (get) If user is unauthenticated.
+     * @principle Role-based access to clinical inventory.
+     */
+    match /blood_products/{bloodProductId} {
+      allow get, list: if isAuthorizedUser();
+      allow create: if isAuthorizedUser() && request.resource.data.id == bloodProductId;
+      allow update, delete: if isAuthorizedUser() && documentExists();
+    }
+
+    /**
+     * @description Tracking of ventilator status and assignment.
+     * @path /ventilators/{ventilatorId}
+     * @allow (create) If user is authorized staff and ID matches path.
+     * @deny (delete) If the ventilator record does not exist.
+     * @principle Validates relational integrity between path and document ID.
+     */
+    match /ventilators/{ventilatorId} {
+      allow get, list: if isAuthorizedUser();
+      allow create: if isAuthorizedUser() && request.resource.data.id == ventilatorId;
+      allow update, delete: if isAuthorizedUser() && documentExists();
+    }
+
+    /**
+     * @description DBAC collection for medical staff roles.
+     * @path /medical_staff/{userId}
+     * @allow (get) If user is checking their own role status.
+     * @deny (create) If a non-admin tries to grant staff status.
+     * @principle Existence-based role management restricted to admins.
+     */
+    match /medical_staff/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description DBAC collection for admin roles. Highly restricted.
+     * @path /admins/{userId}
+     * @allow (get) If user is checking their own admin status.
+     * @deny (list) If requested by a non-admin.
+     * @principle Strict administrative privilege isolation.
+     */
+    match /admins/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+  }
+}
