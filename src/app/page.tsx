@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -42,36 +42,43 @@ import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking
 import { collection, query, orderBy, doc } from "firebase/firestore";
 import { MCIPlan, Patient } from "@/lib/types";
 
+// แยก Component สำหรับแสดงผลตัวเลขเพื่อลดภาระการ Render
+const TriageBox = React.memo(function TriageBox({ color, label, count }: { color: string; label: string; count: number }) {
+  return (
+    <div className={`${color} rounded-2xl p-4 flex flex-col items-center justify-center text-white min-h-[100px] shadow-sm`}>
+      <span className="text-4xl font-black leading-none mb-1 text-white">{count}</span>
+      <span className="text-xs font-bold opacity-80 uppercase tracking-tighter text-white">{label}</span>
+    </div>
+  );
+});
+
 export default function MCIListPage() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  // Fetch MCI Plans from Firestore
+  // Fetch MCI Plans
   const mciPlansRef = collection(firestore, 'mci_plans');
   const plansQuery = useMemoFirebase(() => query(mciPlansRef, orderBy('timestamp', 'desc')), []);
   const { data: mciPlans, isLoading: isPlansLoading } = useCollection<MCIPlan>(plansQuery);
 
-  // Fetch all patients to calculate stats for each plan
+  // Fetch all patients for stats
   const patientsRef = collection(firestore, 'patients');
   const patientsQuery = useMemoFirebase(() => query(patientsRef), []);
   const { data: allPatients, isLoading: isPatientsLoading } = useCollection<Patient>(patientsQuery);
 
-  // States for Create Dialog
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newPlanTitle, setNewPlanTitle] = useState("");
   const [newPlanLocation, setNewPlanLocation] = useState("");
-
-  // States for Delete Alert Dialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<{ id: string, title: string } | null>(null);
 
-  // Optimized Stats Calculation using useMemo to prevent unnecessary re-calculations
+  // คำนวณสถิติแบบระบุผลลัพธ์เฉพาะจุด (Optimized Map)
   const planStatsMap = useMemo(() => {
     const map: Record<string, { red: number; yellow: number; green: number; black: number; total: number }> = {};
     if (!allPatients) return map;
     
-    allPatients.forEach(p => {
+    for (const p of allPatients) {
       const pId = p.planId || 'unknown';
       if (!map[pId]) {
         map[pId] = { red: 0, yellow: 0, green: 0, black: 0, total: 0 };
@@ -81,16 +88,16 @@ export default function MCIListPage() {
       else if (p.triageLevel === 'Urgent') map[pId].yellow++;
       else if (p.triageLevel === 'Minor') map[pId].green++;
       else if (p.triageLevel === 'Deceased') map[pId].black++;
-    });
+    }
     return map;
   }, [allPatients]);
 
-  const handleDeleteClick = (id: string, title: string) => {
+  const handleDeleteClick = useCallback((id: string, title: string) => {
     setPlanToDelete({ id, title });
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const confirmDeleteMCI = () => {
+  const confirmDeleteMCI = useCallback(() => {
     if (planToDelete) {
       const docRef = doc(firestore, 'mci_plans', planToDelete.id);
       deleteDocumentNonBlocking(docRef);
@@ -102,16 +109,16 @@ export default function MCIListPage() {
       setIsDeleteDialogOpen(false);
       setPlanToDelete(null);
     }
-  };
+  }, [planToDelete, firestore, toast]);
 
-  const handleClosePlan = (id: string, title: string) => {
+  const handleClosePlan = useCallback((id: string, title: string) => {
     const docRef = doc(firestore, 'mci_plans', id);
     updateDocumentNonBlocking(docRef, { status: 'Closed' });
     toast({
       title: "ปิดแผนสำเร็จ",
       description: `สถานะของแผน ${title} ถูกเปลี่ยนเป็น 'ปิดแล้ว'`,
     });
-  };
+  }, [firestore, toast]);
 
   const handleConfirmCreatePlan = () => {
     if (!newPlanTitle || !newPlanLocation) {
@@ -128,11 +135,7 @@ export default function MCIListPage() {
       title: newPlanTitle,
       location: newPlanLocation,
       date: now.toLocaleDateString('th-TH'),
-      time: now.toLocaleTimeString('th-TH', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      }),
+      time: now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }),
       status: 'Open',
       timestamp: now.toISOString()
     };
@@ -142,20 +145,15 @@ export default function MCIListPage() {
     setNewPlanTitle("");
     setNewPlanLocation("");
     
-    toast({
-      title: "สร้างแผนใหม่สำเร็จ",
-      description: `แผน ${newPlanTitle} ถูกเพิ่มลงในฐานข้อมูลแล้ว`,
-    });
+    toast({ title: "สร้างแผนใหม่สำเร็จ", description: `แผน ${newPlanTitle} ถูกเพิ่มลงในฐานข้อมูลแล้ว` });
   };
-
-  const isLoading = isPlansLoading || isPatientsLoading;
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] font-sarabun text-slate-900 pb-20">
       <header className="bg-[#b22222] text-white p-6 shadow-lg">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-5">
-            <div className="bg-white p-1 rounded-xl w-16 h-16 flex items-center justify-center overflow-hidden shadow-inner">
+            <div className="relative bg-white p-1 rounded-xl w-16 h-16 flex items-center justify-center overflow-hidden shadow-inner">
                <Image 
                  src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" 
                  alt="Overbrook Logo" 
@@ -182,10 +180,10 @@ export default function MCIListPage() {
       </header>
 
       <main className="max-w-[1600px] mx-auto p-8">
-        {isLoading ? (
+        {isPlansLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
-            <p className="text-slate-500 font-medium">กำลังโหลดข้อมูล...</p>
+            <p className="text-slate-500 font-medium">กำลังโหลดข้อมูลแผนงาน...</p>
           </div>
         ) : !mciPlans || mciPlans.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-slate-300">
@@ -200,7 +198,7 @@ export default function MCIListPage() {
             {mciPlans.map((mci) => {
               const stats = planStatsMap[mci.id] || { red: 0, yellow: 0, green: 0, black: 0, total: 0 };
               return (
-                <div key={mci.id} className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-200 transition-transform hover:scale-[1.01]">
+                <div key={mci.id} className="bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col border border-slate-200 transition-all hover:translate-y-[-4px]">
                   <div className={`${mci.status === 'Open' ? 'bg-[#b22222]' : 'bg-[#4a5568]'} text-white p-4 flex justify-between items-center px-5`}>
                     <div className="flex items-center gap-3 font-bold truncate">
                       <AlertTriangle className="h-5 w-5" />
@@ -214,10 +212,10 @@ export default function MCIListPage() {
                   <div className="p-6 flex-1">
                     <div className="flex flex-col gap-3 text-slate-500 text-sm mb-8">
                       <div className="flex items-center gap-3">
-                        <Calendar className="h-5 w-5 text-[#b22222]" /> <span className="text-slate-700 font-medium">{mci.date} {mci.time}</span>
+                        <Calendar className="h-5 w-5 text-[#b22222]" /> <span className="text-slate-700 font-medium">{mci.date} {mci.time} น.</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-[#b22222]" /> <span className="text-slate-700 font-medium">{mci.location}</span>
+                        <MapPin className="h-5 w-5 text-[#b22222]" /> <span className="text-slate-700 font-medium truncate">{mci.location}</span>
                       </div>
                     </div>
 
@@ -254,7 +252,7 @@ export default function MCIListPage() {
                           className="bg-[#e63946] hover:bg-[#c62828] text-white gap-2 px-6 h-12 font-black rounded-xl shadow-lg shadow-red-100"
                           onClick={() => router.push(`/dashboard?id=${mci.id}`)}
                         >
-                          <LayoutDashboard className="h-5 w-5" /> DASHBOARD
+                          <LayoutDashboard className="h-5 w-5" /> บอร์ดหลัก
                         </Button>
                       </div>
                     </div>
@@ -290,7 +288,7 @@ export default function MCIListPage() {
               <Label htmlFor="newPlanTitle" className="font-bold text-slate-700">ชื่อเหตุการณ์ / แผน MCI</Label>
               <Input 
                 id="newPlanTitle" 
-                placeholder="ระบุชื่อเหตุการณ์ เช่น เพลิงไหม้โรงเรียน..."
+                placeholder="ระบุชื่อเหตุการณ์ เช่น เพลิงไหม้..."
                 className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                 value={newPlanTitle} 
                 onChange={(e) => setNewPlanTitle(e.target.value)}
@@ -316,7 +314,7 @@ export default function MCIListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Pop-up สำหรับยืนยันการลบแผน */}
+      {/* Pop-up ยืนยันการลบแผน */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="bg-white text-slate-900 border-slate-200">
           <AlertDialogHeader>
@@ -325,7 +323,7 @@ export default function MCIListPage() {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-600 text-lg py-2">
               คุณต้องการลบแผน <strong>"{planToDelete?.title}"</strong> ใช่หรือไม่? <br />
-              การลบข้อมูลนี้จะมีผลถาวรและไม่สามารถกู้คืนได้
+              การลบทิ้งจะส่งผลถาวรและไม่สามารถกู้คืนข้อมูลได้
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-4">
@@ -341,15 +339,6 @@ export default function MCIListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
-
-function TriageBox({ color, label, count }: { color: string; label: string; count: number }) {
-  return (
-    <div className={`${color} rounded-2xl p-4 flex flex-col items-center justify-center text-white min-h-[100px] shadow-sm`}>
-      <span className="text-4xl font-black leading-none mb-1 text-white">{count}</span>
-      <span className="text-xs font-bold opacity-80 uppercase tracking-tighter text-white">{label}</span>
     </div>
   );
 }
