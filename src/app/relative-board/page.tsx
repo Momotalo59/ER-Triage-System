@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -40,7 +40,7 @@ const statusThaiMap: Record<PatientStatus, string> = {
   Discharged: "กลับบ้าน",
 };
 
-export default function RelativeBoardPage() {
+function RelativeBoardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get('id');
@@ -53,13 +53,13 @@ export default function RelativeBoardPage() {
       return query(patientsRef, where('planId', '==', planId));
     }
     return query(patientsRef);
-  }, [planId]);
+  }, [planId, firestore]);
 
   const { data: patientsData, isLoading } = useCollection<Patient>(memoizedQuery);
 
-  // Optimized filtering and sorting using useMemo
   const filteredPatients = useMemo(() => {
-    return (patientsData || [])
+    if (!patientsData) return [];
+    return patientsData
       .filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
       .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }, [patientsData, searchTerm]);
@@ -77,7 +77,7 @@ export default function RelativeBoardPage() {
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
-            <div className="bg-white p-1 rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden">
+            <div className="bg-white p-1 rounded-lg w-10 h-10 flex items-center justify-center overflow-hidden shrink-0">
                <Image 
                  src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" 
                  alt="Overbrook Logo" 
@@ -91,7 +91,7 @@ export default function RelativeBoardPage() {
                 <Monitor className="h-6 w-6" /> รายชื่อผู้ป่วย (สำหรับญาติ)
               </h1>
               <p className="text-[10px] opacity-90">
-                จุดบริการข้อมูลญาติ โรงพยาบาลโอเวอร์บรุ๊คเชียงราย
+                โรงพยาบาลโอเวอร์บรุ๊คเชียงราย
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function RelativeBoardPage() {
           <div className="bg-slate-800 text-white p-3 flex items-center gap-3 justify-between">
             <div className="flex items-center gap-3">
               <Users className="h-4 w-4 text-yellow-400" />
-              <h2 className="text-sm font-bold">ข้อมูลการรับตัวผู้ป่วย (อัปเดตเรียลไทม์)</h2>
+              <h2 className="text-sm font-bold">ข้อมูลการรับตัวผู้ป่วย (Real-time)</h2>
             </div>
             {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
           </div>
@@ -177,15 +177,27 @@ export default function RelativeBoardPage() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <InfoCard title="ติดต่อประชาสัมพันธ์" content="053-910-100 ต่อ 0" icon={<Phone className="h-4 w-4" />} />
-          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารหมอกัมพล โรงพยาบาลโอเวอร์บรุ๊ค" icon={<CreditCard className="h-4 w-4" />} />
+          <InfoCard title="จุดรับแจ้งสิทธิรักษา" content="ชั้น 1 อาคารหมอกัมพล" icon={<CreditCard className="h-4 w-4" />} />
           <InfoCard title="สอบถามอาการเพิ่มเติม" content="กรุณาติดต่อเคาน์เตอร์พยาบาล" icon={<Info className="h-4 w-4" />} />
         </div>
       </main>
 
       <footer className="p-6 text-center text-slate-400 text-[10px]">
-        © 2024 โรงพยาบาลโอเวอร์บรุ๊คเชียงราย — ระบบบริหารจัดการภาวะวิกฤต (MCI System)
+        © 2024 โรงพยาบาลโอเวอร์บรุ๊คเชียงราย — MCI System
       </footer>
     </div>
+  );
+}
+
+export default function RelativeBoardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f8f8f8] flex items-center justify-center font-sarabun">
+        <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
+      </div>
+    }>
+      <RelativeBoardContent />
+    </Suspense>
   );
 }
 

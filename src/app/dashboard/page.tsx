@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { KPICards } from "@/components/dashboard/kpi-cards";
 import { PatientTable } from "@/components/dashboard/patient-table";
@@ -16,8 +16,9 @@ import {
   Monitor,
   Droplets,
   XCircle,
-  Check,
-  Trash2
+  PlusCircle,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
@@ -34,18 +35,6 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, doc, where } from "firebase/firestore";
-
-const LungsImageIcon = ({ className }: { className?: string }) => (
-  <div className={`relative ${className} bg-white rounded-sm overflow-hidden flex items-center justify-center`}>
-    <Image 
-      src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp"
-      alt="Lungs Icon"
-      fill
-      sizes="20px"
-      className="object-contain"
-    />
-  </div>
-);
 
 const RealTimeClock = React.memo(function RealTimeClock() {
   const [time, setTime] = useState("");
@@ -64,69 +53,65 @@ const RealTimeClock = React.memo(function RealTimeClock() {
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
-  return <span className="flex items-center gap-1 font-mono"><Calendar className="h-3 w-3" /> {time || "..."}</span>;
+  return <span className="flex items-center gap-1 font-mono text-[10px]"><Calendar className="h-3 w-3" /> {time || "..."}</span>;
 });
 
-// แยกส่วน Dialogs ออกมาเป็น Component เพื่อไม่ให้ re-render หน้าหลัก
-const BloodStockDialog = ({ open, onOpenChange, currentBlood, onSave }: any) => {
-  const [temp, setTemp] = useState(currentBlood);
-  useEffect(() => { if (open) setTemp(currentBlood); }, [open, currentBlood]);
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-white text-slate-900">
-        <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold"><Droplets className="h-6 w-6" /> สต็อกหมู่เลือด</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-6 py-6">
-          {['A', 'B', 'AB', 'O'].map((type) => (
-            <div key={type} className="grid gap-2">
-              <Label className="font-bold">หมู่เลือด {type}</Label>
-              <Input type="number" value={temp[type] || 0} onChange={(e) => setTemp({...temp, [type]: parseInt(e.target.value) || 0})} />
-            </div>
-          ))}
-        </div>
-        <DialogFooter><Button onClick={() => onSave(temp)} className="bg-[#b22222] font-bold">บันทึกข้อมูล</Button></DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+const LungsImageIcon = ({ className }: { className?: string }) => (
+  <div className={`relative ${className} bg-white rounded-sm overflow-hidden flex items-center justify-center`}>
+    <Image 
+      src="https://img2.pic.in.th/depositphotos_399665024-stock-illustration-lungs-silhouette-with-tracheal-branches.webp"
+      alt="Lungs Icon"
+      fill
+      sizes="20px"
+      className="object-contain"
+    />
+  </div>
+);
 
-export default function CrisisTriageDashboard() {
+// แยกส่วน Dashboard Content ออกมาเพื่อใช้ Suspense
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get('id');
   const { toast } = useToast();
   const firestore = useFirestore();
   
-  const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId]);
+  const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId, firestore]);
   const { data: planData } = useDoc<MCIPlan>(planDocRef);
 
   const resourceDocRef = doc(firestore, 'resources', 'current');
   const { data: resources } = useDoc<ResourceSummary>(resourceDocRef);
 
-  // States สำหรับ Dialog
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [isBloodEditOpen, setIsBloodEditOpen] = useState(false);
   const [isVentEditOpen, setIsVentEditOpen] = useState(false);
 
-  // ข้อมูลสำรองสำหรับแก้ไข (Isolated from main state during typing)
   const [tempPlan, setTempPlan] = useState({ title: '', location: '' });
   const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
+  const [tempBlood, setTempBlood] = useState<any>({});
 
   useEffect(() => {
     if (planData && isPlanEditOpen) setTempPlan({ title: planData.title, location: planData.location });
   }, [planData, isPlanEditOpen]);
 
   useEffect(() => {
-    if (resources && isVentEditOpen) setTempVents(resources.ventilators || []);
-  }, [resources, isVentEditOpen]);
+    if (resources) {
+      if (isVentEditOpen) setTempVents(resources.ventilators || []);
+      if (isBloodEditOpen) setTempBlood(resources.bloodInventory || {});
+    }
+  }, [resources, isVentEditOpen, isBloodEditOpen]);
 
   const patientsRef = collection(firestore, 'patients');
-  const memoizedQuery = useMemoFirebase(() => planId ? query(patientsRef, where('planId', '==', planId)) : query(patientsRef), [planId]);
+  const memoizedQuery = useMemoFirebase(() => planId ? query(patientsRef, where('planId', '==', planId)) : query(patientsRef), [planId, firestore]);
   const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
   
-  const patients = useMemo(() => (patientsData || []).sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()), [patientsData]);
+  const patients = useMemo(() => {
+    if (!patientsData) return [];
+    return [...patientsData].sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+  }, [patientsData]);
 
   const handleDeletePatient = useCallback((id: string) => {
-    if (confirm('ยืนยันการลบข้อมูล?')) {
+    if (confirm('ยืนยันการลบข้อมูลผู้ป่วย?')) {
       deleteDocumentNonBlocking(doc(firestore, 'patients', id));
       toast({ title: "ลบข้อมูลสำเร็จ", variant: "destructive" });
     }
@@ -142,7 +127,15 @@ export default function CrisisTriageDashboard() {
     setDocumentNonBlocking(resourceDocRef, updated, { merge: true });
     setIsBloodEditOpen(false);
     setIsVentEditOpen(false);
-    toast({ title: "บันทึกสำเร็จ", description: "อัปเดตทรัพยากรแล้ว" });
+    toast({ title: "บันทึกสำเร็จ", description: "อัปเดตทรัพยากรเรียบร้อย" });
+  };
+
+  const navigateToRelativeBoard = () => {
+    if (planId) {
+      router.push(`/relative-board?id=${planId}`);
+    } else {
+      router.push('/relative-board');
+    }
   };
 
   return (
@@ -150,26 +143,26 @@ export default function CrisisTriageDashboard() {
       <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-md w-14 h-14 flex items-center justify-center overflow-hidden shadow-sm">
-               <Image src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" alt="Logo" width={56} height={56} className="object-contain" priority />
+            <div className="bg-white p-1 rounded-md w-12 h-12 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+               <Image src="https://img1.pic.in.th/images/LOGO-OVERBROOK-2023-03_0.png" alt="Logo" width={48} height={48} className="object-contain" priority />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{planData?.title || "MCI System"}</h1>
-              <div className="flex items-center gap-4 text-[10px] opacity-90 mt-1">
+              <h1 className="text-xl font-bold truncate max-w-[300px]">{planData?.title || "MCI System"}</h1>
+              <div className="flex items-center gap-3 opacity-90">
                 <RealTimeClock />
-                <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {planData?.location || "-"}</span>
+                <span className="flex items-center gap-1 text-[10px]"><MapPin className="h-3 w-3" /> {planData?.location || "-"}</span>
               </div>
             </div>
           </div>
           
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-2 text-xs" onClick={() => router.push('/')}><LayoutList className="h-4 w-4" /> รายการ MCI</Button>
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-2 text-xs" onClick={() => setIsPlanEditOpen(true)}><Edit className="h-4 w-4" /> แก้ไขชื่อแผน</Button>
-            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-2 text-xs" onClick={() => router.push(`/relative-board?id=${planId}`)}><Monitor className="h-4 w-4" /> บอร์ดญาติ</Button>
-            <Button size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-2 text-xs" onClick={() => router.push(`/add-patient?planId=${planId}`)}><Plus className="h-4 w-4" /> เพิ่มผู้ป่วย</Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-2 text-xs" onClick={() => setIsBloodEditOpen(true)}><Droplets className="h-4 w-4 text-red-600" /> หมู่เลือด</Button>
-            <Button variant="secondary" size="sm" className="bg-white text-black gap-2 text-xs" onClick={() => setIsVentEditOpen(true)}><LungsImageIcon className="h-4 w-4" /> เครื่องช่วยหายใจ</Button>
-            <Button variant="destructive" size="sm" className="h-8 gap-2 text-xs" onClick={() => router.push('/')}><XCircle className="h-4 w-4" /> ปิดแผน</Button>
+            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => router.push('/')}><LayoutList className="h-3.5 w-3.5" /> รายการ MCI</Button>
+            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={() => setIsPlanEditOpen(true)}><Edit className="h-3.5 w-3.5" /> แก้ไขชื่อแผน</Button>
+            <Button variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]" onClick={navigateToRelativeBoard}><Monitor className="h-3.5 w-3.5" /> บอร์ดญาติ</Button>
+            <Button size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-1.5 h-8 text-[11px]" onClick={() => router.push(`/add-patient?planId=${planId}`)}><Plus className="h-3.5 w-3.5" /> เพิ่มผู้ป่วย</Button>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsBloodEditOpen(true)}><Droplets className="h-3.5 w-3.5 text-red-600" /> หมู่เลือด</Button>
+            <Button variant="secondary" size="sm" className="bg-white text-black gap-1.5 h-8 text-[11px] hover:bg-slate-100" onClick={() => setIsVentEditOpen(true)}><LungsImageIcon className="h-3.5 w-3.5" /> เครื่องช่วยหายใจ</Button>
+            <Button variant="destructive" size="sm" className="h-8 gap-1.5 text-[11px]" onClick={() => router.push('/')}><XCircle className="h-3.5 w-3.5" /> ปิดแผน</Button>
           </div>
         </div>
       </header>
@@ -185,6 +178,7 @@ export default function CrisisTriageDashboard() {
         <ResourceWidgets patients={patients} onEditBlood={() => setIsBloodEditOpen(true)} onEditVent={() => setIsVentEditOpen(true)} />
       </main>
 
+      {/* Edit Plan Dialog */}
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold"><Edit className="h-5 w-5" /> แก้ไขเหตุการณ์</DialogTitle></DialogHeader>
@@ -196,8 +190,23 @@ export default function CrisisTriageDashboard() {
         </DialogContent>
       </Dialog>
 
-      <BloodStockDialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen} currentBlood={resources?.bloodInventory || {}} onSave={(b: any) => handleSaveResources({ bloodInventory: b })} />
+      {/* Blood Stock Dialog */}
+      <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-white text-slate-900">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold"><Droplets className="h-6 w-6" /> สต็อกหมู่เลือด</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-6 py-6">
+            {['A', 'B', 'AB', 'O'].map((type) => (
+              <div key={type} className="grid gap-2">
+                <Label className="font-bold">หมู่เลือด {type}</Label>
+                <Input type="number" value={tempBlood[type] || 0} onChange={(e) => setTempBlood({...tempBlood, [type]: parseInt(e.target.value) || 0})} />
+              </div>
+            ))}
+          </div>
+          <DialogFooter><Button onClick={() => handleSaveResources({ bloodInventory: tempBlood })} className="bg-[#b22222] font-bold">บันทึกข้อมูล</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
+      {/* Ventilator Dialog */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold"><LungsImageIcon className="h-6 w-6" /> เครื่องช่วยหายใจ</DialogTitle></DialogHeader>
@@ -212,12 +221,27 @@ export default function CrisisTriageDashboard() {
                 </div>
               </div>
             ))}
-            <Button variant="outline" className="w-full border-dashed h-12" onClick={() => setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }])}><Plus className="h-4 w-4" /> เพิ่มแผนก</Button>
+            <Button variant="outline" className="w-full border-dashed h-12" onClick={() => setTempVents([...tempVents, { id: Date.now().toString(), name: '', vent: 0, bird: 0 }])}><PlusCircle className="h-4 w-4" /> เพิ่มแผนก</Button>
           </div>
           <DialogFooter><Button onClick={() => handleSaveResources({ ventilators: tempVents })} className="bg-[#1a5f7a]">บันทึก</Button></DialogFooter>
         </DialogContent>
       </Dialog>
       <Toaster />
     </div>
+  );
+}
+
+export default function CrisisTriageDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center font-sarabun">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
+          <p className="text-slate-500 font-medium">กำลังเตรียมข้อมูล Dashboard...</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
