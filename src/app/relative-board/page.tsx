@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
   Monitor,
@@ -12,7 +12,8 @@ import {
   Search,
   Phone,
   CreditCard,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,33 +28,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Patient } from "@/lib/types";
-
-const MOCK_PATIENTS: Partial<Patient>[] = [
-  { id: '1', name: 'นายสมชาย รักดี', status: 'Admit', destination: 'หอผู้ป่วยกมลรักษ์', arrival: '10:04' },
-  { id: '2', name: 'นางสาววิภา ใจเย็น', status: 'Admit', destination: 'Ns ICU', arrival: '10:19' },
-  { id: '3', name: 'เด็กชายเอ นามสมมติ', status: 'Admit', destination: 'ตึกกุมารเวชกรรม 2', arrival: '10:28' },
-  { id: '4', name: 'นายบุญส่ง สุขภาพดี', status: 'Admit', destination: 'SICU (อาคาร 10)', arrival: '10:34' },
-  { id: '5', name: 'นางมาลี มีความสุข', status: 'Admit', destination: 'Neuro Surgery', arrival: '10:34' },
-  { id: '6', name: 'ไม่ทราบชื่อ (ชาย)', status: 'X-Ray', destination: 'แผนกเอกซเรย์', arrival: '10:45' },
-  { id: '7', name: 'นางกนกพร อ่อนหวาน', status: 'Waiting', destination: 'ER Resuscitation', arrival: '10:50' },
-];
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where, orderBy } from "firebase/firestore";
 
 export default function RelativeBoardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planId = searchParams.get('id');
   const [searchTerm, setSearchTerm] = useState("");
+  const firestore = useFirestore();
 
-  // ระบบรีเฟรชหน้าจออัตโนมัติทุก 15 วินาที (ทำงานอยู่เบื้องหลัง)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      router.refresh();
-    }, 15000);
+  // ดึงข้อมูลผู้ป่วยจริงจาก Firestore กรองตาม planId
+  const patientsRef = collection(firestore, 'patients');
+  const memoizedQuery = useMemoFirebase(() => {
+    if (planId) {
+      return query(patientsRef, where('planId', '==', planId));
+    }
+    return query(patientsRef);
+  }, [planId]);
 
-    return () => clearInterval(timer);
-  }, [router]);
+  const { data: patientsData, isLoading } = useCollection<Patient>(memoizedQuery);
 
-  const filteredPatients = MOCK_PATIENTS.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // กรองข้อมูลด้วยคำค้นหาและจัดเรียงตามเวลาที่รับตัวล่าสุด
+  const filteredPatients = (patientsData || [])
+    .filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
@@ -104,15 +103,18 @@ export default function RelativeBoardPage() {
 
       <main className="max-w-[1400px] mx-auto p-4 md:p-6 lg:p-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          <div className="bg-slate-800 text-white p-4 flex items-center gap-3">
-            <Users className="h-5 w-5 text-yellow-400" />
-            <h2 className="text-lg font-bold">ข้อมูลการรับตัวผู้ป่วย (อัปเดตเรียลไทม์)</h2>
+          <div className="bg-slate-800 text-white p-4 flex items-center gap-3 justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-yellow-400" />
+              <h2 className="text-lg font-bold">ข้อมูลการรับตัวผู้ป่วย (อัปเดตเรียลไทม์)</h2>
+            </div>
+            {isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-400" />}
           </div>
 
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="bg-slate-50">
-                <TableRow className="h-12">
+                <TableRow className="h-12 border-b border-slate-100">
                   <TableHead className="text-[12px] font-bold text-slate-600 px-6">#</TableHead>
                   <TableHead className="text-[12px] font-bold text-slate-600">ชื่อ-นามสกุล</TableHead>
                   <TableHead className="text-[12px] font-bold text-slate-600">สถานะปัจจุบัน</TableHead>
@@ -123,17 +125,19 @@ export default function RelativeBoardPage() {
               <TableBody>
                 {filteredPatients.length > 0 ? (
                   filteredPatients.map((patient, idx) => (
-                    <TableRow key={patient.id} className="h-12 hover:bg-slate-50 transition-colors">
+                    <TableRow key={patient.id} className="h-14 hover:bg-slate-50 transition-colors border-b border-slate-50">
                       <TableCell className="px-6 text-sm font-medium text-slate-400">{idx + 1}</TableCell>
                       <TableCell className="text-base font-bold text-slate-900">{patient.name}</TableCell>
                       <TableCell>
                         <Badge className={`text-[10px] px-2 py-0.5 rounded-full border-none font-bold ${
                           patient.status === 'Admit' ? 'bg-orange-100 text-orange-700' :
                           patient.status === 'X-Ray' ? 'bg-blue-100 text-blue-700' :
+                          patient.status === 'Discharged' ? 'bg-emerald-100 text-emerald-700' :
                           'bg-slate-100 text-slate-700'
                         }`}>
                           {patient.status === 'Admit' ? 'รับไว้รักษา (Admit)' : 
-                           patient.status === 'X-Ray' ? 'กำลังเอกซเรย์' : 'รอตรวจ'}
+                           patient.status === 'X-Ray' ? 'กำลังเอกซเรย์' : 
+                           patient.status === 'Discharged' ? 'จำหน่ายกลับบ้าน' : 'รอตรวจ'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600 font-medium">
@@ -153,7 +157,7 @@ export default function RelativeBoardPage() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="h-40 text-center text-slate-400 text-sm font-medium">
-                      ไม่พบรายชื่อผู้ป่วยที่ค้นหา
+                      {isLoading ? 'กำลังโหลดข้อมูล...' : 'ไม่พบรายชื่อผู้ป่วยในขณะนี้'}
                     </TableCell>
                   </TableRow>
                 )}
