@@ -34,6 +34,29 @@ import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking } from "@/firebase";
 import { collection, query, doc, where } from "firebase/firestore";
 
+// แยก Component นาฬิกาเพื่อประสิทธิภาพ (ป้องกัน Re-render ทั้งหน้า Dashboard ทุกวินาที)
+function RealTimeClock() {
+  const [time, setTime] = useState("");
+  
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear() + 543;
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      setTime(`${day}/${month}/${year} ${hours}:${minutes}:${seconds}`);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {time || "กำลังโหลด..."}</span>;
+}
+
 export default function CrisisTriageDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,16 +68,12 @@ export default function CrisisTriageDashboard() {
   const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId]);
   const { data: planData } = useDoc<MCIPlan>(planDocRef);
 
-  const [planName, setPlanName] = useState("กำลังโหลดข้อมูล...");
-  const [planLocation, setPlanLocation] = useState("กำลังโหลด...");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [tempPlanName, setTempPlanName] = useState("");
   const [tempPlanLocation, setTempPlanLocation] = useState("");
 
   useEffect(() => {
     if (planData) {
-      setPlanName(planData.title);
-      setPlanLocation(planData.location);
       setTempPlanName(planData.title);
       setTempPlanLocation(planData.location);
     }
@@ -73,36 +92,6 @@ export default function CrisisTriageDashboard() {
   const patients = (patientsData || []).sort((a, b) => {
     return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
   });
-
-  const [currentDateTime, setCurrentDateTime] = useState<string>("");
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, '0');
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const year = now.getFullYear() + 543;
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      setCurrentDateTime(`${day}/${month}/${year} ${hours}:${minutes}:${seconds}`);
-    };
-    
-    updateTime();
-    const timer = setInterval(updateTime, 1000); 
-    
-    // ระบบรีเฟรชข้อมูลเบื้องหลังทุก 15 วินาที
-    const refreshTimer = setInterval(() => {
-      // ข้อมูลจาก useCollection และ useDoc เป็น real-time อยู่แล้ว 
-      // แต่การสั่ง setInterval จะช่วยตรวจสอบสถานะการเชื่อมต่อและ re-render ส่วนประกอบที่จำเป็น
-      console.log('Background data check performed');
-    }, 15000);
-
-    return () => {
-      clearInterval(timer);
-      clearInterval(refreshTimer);
-    };
-  }, []);
 
   const handleDeletePatient = (id: string) => {
     if (confirm('ยืนยันการลบข้อมูล?')) {
@@ -123,12 +112,10 @@ export default function CrisisTriageDashboard() {
          location: tempPlanLocation 
        });
     }
-    setPlanName(tempPlanName);
-    setPlanLocation(tempPlanLocation);
     setIsPlanEditOpen(false);
     toast({
       title: "บันทึกสำเร็จ",
-      description: "ข้อมูลเหตุการณ์ถูกอัปเดตในฐานข้อมูลแล้ว",
+      description: "ข้อมูลเหตุการณ์ถูกอัปเดตเรียบร้อยแล้ว",
     });
   };
 
@@ -163,14 +150,12 @@ export default function CrisisTriageDashboard() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">
-                {planName}
+                {planData?.title || "กำลังโหลดข้อมูล..."}
               </h1>
               <div className="flex items-center gap-4 text-[10px] opacity-90 mt-1 text-white">
+                <RealTimeClock />
                 <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> {currentDateTime || "กำลังโหลด..."}
-                </span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> {planLocation}
+                  <MapPin className="h-3 w-3" /> {planData?.location || "กำลังโหลด..."}
                 </span>
               </div>
             </div>
@@ -190,8 +175,8 @@ export default function CrisisTriageDashboard() {
               size="sm" 
               className="h-8 bg-black/20 hover:bg-black/40 text-white border-none gap-2 text-xs"
               onClick={() => {
-                setTempPlanName(planName);
-                setTempPlanLocation(planLocation);
+                setTempPlanName(planData?.title || "");
+                setTempPlanLocation(planData?.location || "");
                 setIsPlanEditOpen(true);
               }}
             >
