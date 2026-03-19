@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -17,7 +18,6 @@ import {
   Droplets,
   Wind,
   XCircle,
-  Printer,
   Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,9 +38,7 @@ const MOCK_PATIENTS: Patient[] = [
   { id: '2', scene: 'แดง 2', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'SDH SAH', status: 'Admit', destination: 'Neurosurgical Intensive Care Unit (Ns ICU)', o2: 'ETT', arrival: '10:19', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
   { id: '3', scene: 'แดง 3', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Tension pneumothorax', status: 'Admit', destination: 'ตึกกุมารเวชกรรม2 (อ.9 เฟส2 ชั้น4)', o2: '-', arrival: '10:28', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
   { id: '4', scene: 'แดง 4', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'Second degree burn 30%', status: 'Admit', destination: 'SICU (อาคาร10 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery (อาคาร4 ชั้น3) (ยกเลิก)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '6', scene: 'แดง 7', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: '-', status: 'X-Ray', destination: '-', o2: '-', arrival: '11:02', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
-  { id: '7', scene: 'แดง 9', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: '-', status: 'X-Ray', destination: '-', o2: '-', arrival: '11:03', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
+  { id: '5', scene: 'แดง 5', triageLevel: 'Critical', name: '-', hn: '-', age: 0, edTriage: 'Critical', diagnosis: 'EDH c skull fracture', status: 'Admit', destination: 'Neuro Surgery (อาคาร4 ชั้น3)', o2: 'ETT', arrival: '10:34', disp: '-', blood: '-', note: '', timestamp: new Date().toISOString() },
 ];
 
 const MOCK_RESOURCES: ResourceSummary = {
@@ -115,7 +113,7 @@ export default function CrisisTriageDashboard() {
               <div className="flex items-center gap-4 text-xs opacity-90 mt-1">
                 <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> 18/03/2569 09:15</span>
                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {planLocation}</span>
-                <span className="flex items-center gap-1 text-yellow-300"><RefreshCw className="h-3 w-3" /> รีเฟรชใน 5 วิ</span>
+                <span className="flex items-center gap-1 text-yellow-300"><RefreshCw className="h-3 w-3" /> รีเฟรชอัตโนมัติ</span>
               </div>
             </div>
           </div>
@@ -166,14 +164,9 @@ export default function CrisisTriageDashboard() {
             <h2 className="font-bold flex items-center gap-2">
               <LayoutList className="h-4 w-4" /> รายชื่อผู้ป่วย ({patients.length} ราย)
             </h2>
-            <div className="flex gap-2 items-center">
-               <Button variant="outline" size="sm" className="h-7 bg-white/10 hover:bg-white/20 border-white/30 text-white gap-1">
-                <Printer className="h-3.5 w-3.5" /> Print
-              </Button>
-              <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-3.5 w-3.5" /> เพิ่ม
-              </Button>
-            </div>
+            <Button size="sm" className="h-7 bg-white text-black hover:bg-slate-100" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> เพิ่มรายใหม่
+            </Button>
           </div>
           <PatientTable 
             patients={patients} 
@@ -198,8 +191,8 @@ export default function CrisisTriageDashboard() {
       <Dialog open={isPlanEditOpen} onOpenChange={setIsPlanEditOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="h-5 w-5" /> แก้ไขชื่อแผน / สถานที่
+            <DialogTitle className="flex items-center gap-2 text-[#b22222]">
+              <Edit className="h-5 w-5" /> แก้ไขข้อมูลเหตุการณ์
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
