@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -53,9 +52,7 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
     }
   }, [resources]);
 
-  // ฟังก์ชันนับจำนวนตามสถานะจริง
   const getStatusCount = (s: PatientStatus) => patients.filter(p => p.status === s).length;
-  // ฟังก์ชันนับจำนวนตามระดับการคัดกรองจริง (ใช้ edTriage)
   const getEDTriageCount = (l: TriageLevel) => patients.filter(p => p.edTriage === l).length;
 
   const handleSaveResources = (updatedResources: Partial<ResourceSummary>) => {
@@ -84,7 +81,7 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* 1. สถานะผู้ป่วย - อัปเดตตามข้อมูลจริง */}
+      {/* 1. สถานะผู้ป่วย - ชุดสถานะใหม่ */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#334155] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
           <LayoutList className="h-4 w-4 text-white" />
@@ -92,19 +89,17 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
         </CardHeader>
         <CardContent className="p-3 bg-white">
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-            <StatusRow label="กำลังตรวจรักษา" count={getStatusCount('Waiting')} />
+            <StatusRow label="รอตรวจ" count={getStatusCount('Waiting')} />
+            <StatusRow label="ห้องปฏิบัติการ" count={getStatusCount('Lab')} />
             <StatusRow label="X-Ray" count={getStatusCount('X-Ray')} />
-            <StatusRow label="CT" count={getStatusCount('CT')} />
-            <StatusRow label="OR" count={getStatusCount('OR')} />
             <StatusRow label="Admit" count={getStatusCount('Admit')} />
-            <StatusRow label="D/C" count={getStatusCount('D/C')} />
-            <StatusRow label="Refer" count={getStatusCount('Refer')} />
-            <StatusRow label="Dead" count={getStatusCount('Dead')} />
+            <StatusRow label="รอรับยา" count={getStatusCount('Pharmacy')} />
+            <StatusRow label="กลับบ้าน" count={getStatusCount('Discharged')} />
           </div>
         </CardContent>
       </Card>
 
-      {/* 2. ED Triage - อัปเดตตามข้อมูลจริง */}
+      {/* 2. ED Triage */}
       <Card className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#8e24aa] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
           <Activity className="h-4 w-4 text-white" />
@@ -123,9 +118,7 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
       <Card id="blood-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#b22222] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <div className="h-4 w-4 relative">
-               <Droplets className="h-4 w-4 text-white" />
-            </div>
+            <Droplets className="h-4 w-4 text-white" />
             <CardTitle className="text-sm font-bold text-white">หมู่เลือด</CardTitle>
           </div>
           <button 
@@ -186,7 +179,6 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
         </CardContent>
       </Card>
 
-      {/* Dialog แก้ไขหมู่เลือด */}
       <Dialog open={isBloodEditOpen} onOpenChange={setIsBloodEditOpen}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900 border-slate-200">
           <DialogHeader>
@@ -220,7 +212,6 @@ export function ResourceWidgets({ patients }: ResourceWidgetsProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog แก้ไขเครื่องช่วยหายใจ */}
       <Dialog open={isVentEditOpen} onOpenChange={setIsVentEditOpen}>
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 border-slate-200 max-h-[80vh] overflow-y-auto">
           <DialogHeader>

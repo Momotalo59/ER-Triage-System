@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -35,7 +34,7 @@ export default function AddPatientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get('id');
-  const planId = searchParams.get('planId'); // ดึง planId จาก URL
+  const planId = searchParams.get('planId');
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -44,7 +43,7 @@ export default function AddPatientPage() {
     hn: '',
     age: 0,
     gender: 'ชาย',
-    scene: 'แดง 1',
+    scene: '',
     symptoms: '',
     triageLevel: 'Minor',
     diagnosis: '',
@@ -60,7 +59,6 @@ export default function AddPatientPage() {
     note: '',
   });
 
-  // If editing, fetch existing patient data
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
@@ -76,28 +74,26 @@ export default function AddPatientPage() {
     const patientsRef = collection(firestore, 'patients');
     const dataToSave = {
       ...formData,
-      planId: planId || formData.planId || "", // บันทึก planId ลงไปเพื่อแยกตามเหตุการณ์
+      planId: planId || formData.planId || "",
       timestamp: new Date().toISOString(),
-      edTriage: formData.triageLevel, // Sync triage level
+      edTriage: formData.triageLevel,
     };
 
     if (patientId) {
-      // Update existing
       updateDocumentNonBlocking(doc(firestore, 'patients', patientId), dataToSave);
       toast({
         title: "อัปเดตข้อมูลสำเร็จ",
         description: `แก้ไขข้อมูลผู้ป่วย ${formData.name} เรียบร้อยแล้ว`,
       });
     } else {
-      // Create new
       addDocumentNonBlocking(patientsRef, dataToSave);
       toast({
         title: "ลงทะเบียนสำเร็จ",
-        description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบ Firestore แล้ว`,
+        description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบแล้ว`,
       });
     }
     
-    router.push(`/dashboard?id=${planId}`);
+    router.push(`/dashboard?id=${planId || formData.planId}`);
   };
 
   return (
@@ -138,7 +134,6 @@ export default function AddPatientPage() {
       <main className="max-w-[1200px] mx-auto p-6 mt-4">
         <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
           <form onSubmit={handleSubmit} className="space-y-10">
-            {/* Section 1: ข้อมูลพื้นฐาน */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <ClipboardList className="h-7 w-7" /> ข้อมูลพื้นฐานและอาการ
@@ -204,7 +199,6 @@ export default function AddPatientPage() {
               </div>
             </section>
 
-            {/* Section 2: สัญญาณชีพและหมู่เลือด */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <HeartPulse className="h-7 w-7" /> สัญญาณชีพและข้อมูลทางคลินิก
@@ -271,7 +265,6 @@ export default function AddPatientPage() {
               </div>
             </section>
 
-            {/* Section 3: การคัดกรองและสถานะ */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <Activity className="h-7 w-7" /> การคัดกรองและแผนการรักษา
@@ -303,10 +296,11 @@ export default function AddPatientPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Waiting">รอตรวจ</SelectItem>
-                      <SelectItem value="X-Ray">เอกซเรย์</SelectItem>
-                      <SelectItem value="Lab">ส่งแล็บ</SelectItem>
-                      <SelectItem value="Admit">รับไว้รักษา</SelectItem>
-                      <SelectItem value="Discharged">จำหน่ายกลับบ้าน</SelectItem>
+                      <SelectItem value="Lab">ห้องปฏิบัติการ</SelectItem>
+                      <SelectItem value="X-Ray">X-Ray</SelectItem>
+                      <SelectItem value="Admit">Admit</SelectItem>
+                      <SelectItem value="Pharmacy">รอรับยา</SelectItem>
+                      <SelectItem value="Discharged">กลับบ้าน</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

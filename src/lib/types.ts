@@ -1,6 +1,6 @@
 export type TriageLevel = 'Critical' | 'Urgent' | 'Minor' | 'Deceased' | 'Non-Urgent';
 
-export type PatientStatus = 'Waiting' | 'X-Ray' | 'CT' | 'Lab' | 'Admit' | 'OR' | 'D/C' | 'Refer' | 'Dead';
+export type PatientStatus = 'Waiting' | 'Lab' | 'X-Ray' | 'Admit' | 'Pharmacy' | 'Discharged';
 
 export interface Patient {
   id: string;

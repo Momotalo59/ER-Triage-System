@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -27,9 +26,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { Patient } from "@/lib/types";
+import { Patient, PatientStatus } from "@/lib/types";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
+
+const statusThaiMap: Record<PatientStatus, string> = {
+  Waiting: "รอตรวจ",
+  Lab: "ห้องปฏิบัติการ",
+  "X-Ray": "X-Ray",
+  Admit: "Admit",
+  Pharmacy: "รอรับยา",
+  Discharged: "กลับบ้าน",
+};
 
 export default function RelativeBoardPage() {
   const router = useRouter();
@@ -38,7 +46,6 @@ export default function RelativeBoardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const firestore = useFirestore();
 
-  // ดึงข้อมูลผู้ป่วยจริงจาก Firestore กรองตาม planId (Real-time update)
   const patientsRef = collection(firestore, 'patients');
   const memoizedQuery = useMemoFirebase(() => {
     if (planId) {
@@ -49,14 +56,12 @@ export default function RelativeBoardPage() {
 
   const { data: patientsData, isLoading } = useCollection<Patient>(memoizedQuery);
 
-  // กรองข้อมูลด้วยคำค้นหาและจัดเรียงตามเวลาที่รับตัวล่าสุด
   const filteredPatients = (patientsData || [])
     .filter(p => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] font-sarabun text-slate-900">
-      {/* Header */}
       <header className="bg-[#b22222] text-white p-4 shadow-lg sticky top-0 z-40">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
@@ -132,12 +137,12 @@ export default function RelativeBoardPage() {
                         <Badge className={`text-[9px] px-2 py-0.5 rounded-full border-none font-bold ${
                           patient.status === 'Admit' ? 'bg-orange-100 text-orange-700' :
                           patient.status === 'X-Ray' ? 'bg-blue-100 text-blue-700' :
+                          patient.status === 'Lab' ? 'bg-purple-100 text-purple-700' :
+                          patient.status === 'Pharmacy' ? 'bg-pink-100 text-pink-700' :
                           patient.status === 'Discharged' ? 'bg-emerald-100 text-emerald-700' :
                           'bg-slate-100 text-slate-700'
                         }`}>
-                          {patient.status === 'Admit' ? 'รับไว้รักษา (Admit)' : 
-                           patient.status === 'X-Ray' ? 'กำลังเอกซเรย์' : 
-                           patient.status === 'Discharged' ? 'จำหน่ายกลับบ้าน' : 'รอตรวจ'}
+                          {statusThaiMap[patient.status] || patient.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-[12px] text-slate-600 font-medium">

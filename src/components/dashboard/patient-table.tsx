@@ -24,14 +24,20 @@ const triageColorMap: Record<TriageLevel, string> = {
 
 const statusColorMap: Record<PatientStatus, string> = {
   Waiting: "bg-slate-400 text-white",
-  "X-Ray": "bg-sky-400 text-white",
-  CT: "bg-blue-600 text-white",
   Lab: "bg-purple-500 text-white",
+  "X-Ray": "bg-sky-400 text-white",
   Admit: "bg-orange-500 text-white",
-  OR: "bg-red-800 text-white",
-  "D/C": "bg-emerald-500 text-white",
-  Refer: "bg-indigo-500 text-white",
-  Dead: "bg-black text-white",
+  Pharmacy: "bg-pink-400 text-white",
+  Discharged: "bg-emerald-500 text-white",
+};
+
+const statusThaiMap: Record<PatientStatus, string> = {
+  Waiting: "รอตรวจ",
+  Lab: "ห้องปฏิบัติการ",
+  "X-Ray": "X-Ray",
+  Admit: "Admit",
+  Pharmacy: "รอรับยา",
+  Discharged: "กลับบ้าน",
 };
 
 interface PatientTableProps {
@@ -81,18 +87,20 @@ export function PatientTable({ patients, onEdit, onDelete }: PatientTableProps) 
               <TableCell>{patient.age || '-'}</TableCell>
               <TableCell>
                  <div className={`w-8 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${triageColorMap[patient.edTriage]}`}>
-                  {patient.edTriage === 'Critical' ? 'แดง' : 'แดง'}
+                  {patient.edTriage === 'Critical' ? 'แดง' : 
+                   patient.edTriage === 'Urgent' ? 'เหลือง' :
+                   patient.edTriage === 'Minor' ? 'เขียว' : 'แดง'}
                 </div>
               </TableCell>
               <TableCell className="max-w-[150px] truncate">{patient.diagnosis}</TableCell>
               <TableCell>
                 <Badge variant="outline" className={`${statusColorMap[patient.status]} border-none rounded-sm px-2 py-0 h-5 text-[10px]`}>
-                  {patient.status}
+                  {statusThaiMap[patient.status] || patient.status}
                 </Badge>
               </TableCell>
               <TableCell className="max-w-[200px] truncate">{patient.destination}</TableCell>
               <TableCell>
-                {patient.o2 !== '-' ? (
+                {patient.o2 && patient.o2 !== '-' ? (
                   <Badge className="bg-cyan-400 hover:bg-cyan-500 text-white border-none rounded-sm px-1.5 py-0 h-5 text-[10px]">
                     {patient.o2}
                   </Badge>
