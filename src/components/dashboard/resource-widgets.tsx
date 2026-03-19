@@ -91,9 +91,9 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
             <StatusRow label="CT" count={getStatusCount('CT')} />
             <StatusRow label="OR" count={0} />
             <StatusRow label="Admit" count={getStatusCount('Admit')} />
-            <StatusRow label="D/C" count={0} />
-            <StatusRow label="Refer" count={0} />
-            <StatusRow label="Dead" count={0} />
+            <StatusRow label="D/C" count={getStatusCount('D/C')} />
+            <StatusRow label="Refer" count={getStatusCount('Refer')} />
+            <StatusRow label="Dead" count={getStatusCount('Dead')} />
           </div>
         </CardContent>
       </Card>
@@ -103,7 +103,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
         <CardHeader className="bg-[#8e24aa] text-white p-2 px-4 flex-row items-center gap-2 space-y-0">
           <Activity className="h-4 w-4 text-white" />
           <CardTitle className="text-sm font-bold text-white">ED Triage</CardTitle>
-        </Header>
+        </CardHeader>
         <CardContent className="p-3 bg-white space-y-1.5">
           <TriageSmallRow color="bg-[#e63946]" label="แดง" count={getTriageCount('Critical')} />
           <TriageSmallRow color="bg-[#d81b60]" label="ชมพู" count={0} />
