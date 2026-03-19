@@ -49,7 +49,6 @@ export default function AddPatientPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // ในที่นี้จำลองการบันทึกข้อมูล (ในอนาคตจะเชื่อมต่อกับ Firestore)
     toast({
       title: "ลงทะเบียนสำเร็จ",
       description: `ผู้ป่วย ${formData.name} ถูกเพิ่มเข้าในระบบแล้ว`,
@@ -59,10 +58,10 @@ export default function AddPatientPage() {
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] font-sarabun text-white pb-10">
-      {/* Header */}
-      <header className="bg-[#b22222] text-white p-4 shadow-md sticky top-0 z-40">
-        <div className="max-w-[1000px] mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
+      {/* Header ตามรูปแบบที่กำหนด */}
+      <header className="bg-[#b22222] text-white p-3 shadow-md sticky top-0 z-40">
+        <div className="max-w-[1200px] mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
              <Button 
                variant="ghost" 
                size="icon" 
@@ -85,7 +84,7 @@ export default function AddPatientPage() {
             </h1>
           </div>
           <Button 
-            className="bg-white text-[#b22222] hover:bg-slate-100 font-bold gap-2"
+            className="bg-white text-[#b22222] hover:bg-slate-100 font-bold gap-2 rounded-lg"
             onClick={handleSubmit}
           >
             <Save className="h-4 w-4" /> บันทึกข้อมูล
@@ -93,20 +92,20 @@ export default function AddPatientPage() {
         </div>
       </header>
 
-      <main className="max-w-[1000px] mx-auto p-6 mt-4">
-        <div className="bg-[#262626] rounded-2xl p-8 shadow-2xl border border-white/5">
-          <form onSubmit={handleSubmit} className="space-y-8">
+      <main className="max-w-[1200px] mx-auto p-6 mt-4">
+        <div className="bg-[#262626] rounded-3xl p-8 shadow-2xl border border-white/5">
+          <form onSubmit={handleSubmit} className="space-y-10">
             {/* Section 1: ข้อมูลพื้นฐาน */}
-            <section className="space-y-4">
-              <h2 className="text-[#b22222] font-bold flex items-center gap-2 border-b border-white/10 pb-2">
-                <ClipboardList className="h-4 w-4" /> ข้อมูลพื้นฐานและอาการ
+            <section className="space-y-6">
+              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg">
+                <ClipboardList className="h-5 w-5" /> ข้อมูลพื้นฐานและอาการ
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">ชื่อ-นามสกุล (หรือสัญลักษณ์ระบุตัวตน)</Label>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="name" className="text-slate-300">ชื่อ-นามสกุล (หรือสัญลักษณ์ระบุตัวตน)</Label>
                   <Input 
                     id="name" 
-                    className="bg-[#333] border-white/10 text-white"
+                    className="bg-[#333] border-white/10 text-white h-12"
                     placeholder="ระบุชื่อหรือรหัสผู้ป่วย"
                     value={formData.name} 
                     onChange={e => setFormData(p => ({...p, name: e.target.value}))} 
@@ -114,10 +113,10 @@ export default function AddPatientPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="hn">เลข HN (ถ้ามี)</Label>
+                  <Label htmlFor="hn" className="text-slate-300">เลข HN (ถ้ามี)</Label>
                   <Input 
                     id="hn" 
-                    className="bg-[#333] border-white/10 text-white"
+                    className="bg-[#333] border-white/10 text-white h-12"
                     placeholder="Hospital Number"
                     value={formData.hn} 
                     onChange={e => setFormData(p => ({...p, hn: e.target.value}))} 
@@ -125,19 +124,19 @@ export default function AddPatientPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="age">อายุ</Label>
+                    <Label htmlFor="age" className="text-slate-300">อายุ</Label>
                     <Input 
                       id="age" 
                       type="number" 
-                      className="bg-[#333] border-white/10 text-white"
+                      className="bg-[#333] border-white/10 text-white h-12"
                       value={formData.age} 
                       onChange={e => setFormData(p => ({...p, age: parseInt(e.target.value)}))} 
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="gender">เพศ</Label>
+                    <Label htmlFor="gender" className="text-slate-300">เพศ</Label>
                     <Select value={formData.gender} onValueChange={v => setFormData(p => ({...p, gender: v}))}>
-                      <SelectTrigger className="bg-[#333] border-white/10 text-white">
+                      <SelectTrigger className="bg-[#333] border-white/10 text-white h-12">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-[#333] text-white border-white/10">
@@ -151,10 +150,10 @@ export default function AddPatientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="symptoms">อาการสำคัญ (Chief Complaint)</Label>
+                <Label htmlFor="symptoms" className="text-slate-300">อาการสำคัญ (Chief Complaint)</Label>
                 <Textarea 
                   id="symptoms" 
-                  className="bg-[#333] border-white/10 text-white min-h-[100px]"
+                  className="bg-[#333] border-white/10 text-white min-h-[120px] text-lg"
                   placeholder="ระบุอาการแรกรับของผู้ป่วย..."
                   value={formData.symptoms} 
                   onChange={e => setFormData(p => ({...p, symptoms: e.target.value}))}
@@ -163,15 +162,15 @@ export default function AddPatientPage() {
             </section>
 
             {/* Section 2: การคัดกรองและสถานะ */}
-            <section className="space-y-4">
-              <h2 className="text-[#b22222] font-bold flex items-center gap-2 border-b border-white/10 pb-2">
-                <Activity className="h-4 w-4" /> การคัดกรองและแผนการรักษา
+            <section className="space-y-6">
+              <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-lg">
+                <Activity className="h-5 w-5" /> การคัดกรองและแผนการรักษา
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="triage">ระดับความรุนแรง (Triage Level)</Label>
+                  <Label htmlFor="triage" className="text-slate-300">ระดับความรุนแรง (Triage Level)</Label>
                   <Select value={formData.triageLevel} onValueChange={v => setFormData(p => ({...p, triageLevel: v as TriageLevel}))}>
-                    <SelectTrigger className={`border-none font-bold ${
+                    <SelectTrigger className={`border-none font-bold h-12 ${
                       formData.triageLevel === 'Critical' ? 'bg-[#e63946] text-white' :
                       formData.triageLevel === 'Urgent' ? 'bg-[#ffb703] text-black' :
                       formData.triageLevel === 'Minor' ? 'bg-[#2a9d8f] text-white' : 'bg-[#212529] text-white'
@@ -187,9 +186,9 @@ export default function AddPatientPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">สถานะปัจจุบัน</Label>
+                  <Label htmlFor="status" className="text-slate-300">สถานะปัจจุบัน</Label>
                   <Select value={formData.status} onValueChange={v => setFormData(p => ({...p, status: v as PatientStatus}))}>
-                    <SelectTrigger className="bg-[#333] border-white/10 text-white">
+                    <SelectTrigger className="bg-[#333] border-white/10 text-white h-12">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#333] text-white border-white/10">
@@ -202,10 +201,10 @@ export default function AddPatientPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="scene">จุดเกิดเหตุ / รถนำส่ง</Label>
+                  <Label htmlFor="scene" className="text-slate-300">จุดเกิดเหตุ / รถนำส่ง</Label>
                   <Input 
                     id="scene" 
-                    className="bg-[#333] border-white/10 text-white"
+                    className="bg-[#333] border-white/10 text-white h-12"
                     placeholder="เช่น แดง 1, กู้ชีพ..."
                     value={formData.scene} 
                     onChange={e => setFormData(p => ({...p, scene: e.target.value}))} 
@@ -215,21 +214,23 @@ export default function AddPatientPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="diagnosis">การวินิจฉัยเบื้องต้น (Initial Diagnosis)</Label>
+                  <Label htmlFor="diagnosis" className="text-slate-300">การวินิจฉัยเบื้องต้น (Initial Diagnosis)</Label>
                   <Input 
                     id="diagnosis" 
-                    className="bg-[#333] border-white/10 text-white"
+                    className="bg-[#333] border-white/10 text-white h-12"
                     value={formData.diagnosis} 
                     onChange={e => setFormData(p => ({...p, diagnosis: e.target.value}))} 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="destination">จุดหมาย/หน่วยรับต่อ (Destination)</Label>
+                  <Label htmlFor="destination" className="text-slate-300">จุดหมาย/หน่วยรับต่อ (Destination)</Label>
                   <div className="flex gap-2">
-                    <MapPin className="h-10 w-10 p-2 bg-[#333] rounded-md text-slate-400" />
+                    <div className="flex items-center justify-center h-12 w-12 bg-[#333] rounded-lg border border-white/10">
+                      <MapPin className="h-5 w-5 text-slate-400" />
+                    </div>
                     <Input 
                       id="destination" 
-                      className="bg-[#333] border-white/10 text-white"
+                      className="bg-[#333] border-white/10 text-white h-12 flex-1"
                       value={formData.destination} 
                       onChange={e => setFormData(p => ({...p, destination: e.target.value}))} 
                     />
@@ -238,17 +239,17 @@ export default function AddPatientPage() {
               </div>
             </section>
 
-            <div className="pt-6 flex gap-4">
+            <div className="pt-8 flex gap-4">
               <Button 
                 type="submit" 
-                className="flex-1 bg-[#b22222] hover:bg-[#8b1a1a] h-12 text-lg font-bold"
+                className="flex-1 bg-[#b22222] hover:bg-[#8b1a1a] h-14 text-xl font-bold rounded-xl shadow-lg"
               >
                 ยืนยันการลงทะเบียน
               </Button>
               <Button 
                 type="button" 
                 variant="outline" 
-                className="px-8 h-12 border-white/10 text-white hover:bg-white/5"
+                className="px-10 h-14 border-white/10 bg-[#333] text-white hover:bg-[#444] rounded-xl text-lg"
                 onClick={() => router.back()}
               >
                 ยกเลิก
