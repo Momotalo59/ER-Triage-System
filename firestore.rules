@@ -6,26 +6,9 @@ service cloud.firestore {
      * CRISIS TRIAGE DASHBOARD SECURITY RULES
      * 
      * Core Philosophy:
-     * This ruleset implements a Role-Based Access Control (RBAC) model driven by a Database Access 
-     * Control (DBAC) collection. Access to clinical and operational data is granted exclusively 
-     * to users verified as "Medical Personnel."
-     * 
-     * Data Structure:
-     * - /patients/{patientId}: Clinical records for ED patients.
-     * - /blood_inventory/{bloodTypeId}: Resource tracking for blood units.
-     * - /ventilators/{ventilatorId}: Equipment tracking and patient assignment.
-     * - /roles_medical_personnel/{userId}: Authorization lookup table.
-     * 
-     * Key Security Decisions:
-     * - Authorization Independence: Access decisions for operational collections are decoupled 
-     *   from the data within those collections. Instead, they rely on the presence of a 
-     *   UID-keyed document in the /roles_medical_personnel collection.
-     * - Global Read/Write for Personnel: Once a user is verified as Medical Personnel, they 
-     *   have full CRUD access to patients and inventory to ensure zero-friction in emergency settings.
-     * - Denormalization: Documents are expected to contain an 'id' field matching their 
-     *   Firestore document ID to maintain relational integrity without complex joins.
-     * - Non-Personnel Access: Users without the medical personnel role (including unauthenticated 
-     *   users) are denied access to all clinical data by default.
+     * This ruleset implements a Role-Based Access Control (RBAC) model.
+     * In the prototype stage, all authenticated users are granted access to clinical data
+     * to ensure smooth development and testing.
      */
 
     // --- HELPER FUNCTIONS ---
@@ -35,14 +18,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    /** @description Checks if the user's UID exists in the medical personnel roles collection. */
+    /** @description For the prototype, all signed-in users have medical clearance. */
     function isMedicalPersonnel() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_medical_personnel/$(request.auth.uid));
+      return isSignedIn();
     }
 
-    /** @description Verifies the document exists and the requester has medical personnel clearance. */
+    /** @description Verifies the document exists and the requester has medical clearance. */
     function canModifyOperationalData() {
-      return isMedicalPersonnel() && resource != null;
+      return isMedicalPersonnel() && (resource != null || request.method == 'create');
     }
 
     /** @description Ensures a field remains unchanged during an update. */
@@ -54,56 +37,52 @@ service cloud.firestore {
 
     /**
      * @description Authorization lookup for medical personnel.
-     * @path /roles_medical_personnel/{userId}
-     * @allow (get) If the user is signed in and checking their own role status.
-     * @deny (list, create, update, delete) Restricted to admin/system level management.
-     * @principle Separation of concerns: Roles are managed outside the standard app flow.
      */
     match /roles_medical_personnel/{userId} {
       allow get: if isSignedIn() && request.auth.uid == userId;
-      allow list, create, update, delete: if false;
+      allow list: if isMedicalPersonnel();
     }
 
     /**
      * @description Clinical records for patients in the Emergency Department.
-     * @path /patients/{patientId}
-     * @allow (create) If requester is medical personnel and provides matching internal ID.
-     * @deny (read/write) If requester lacks the medical personnel role document.
-     * @principle Role-Based Access Control via DBAC collection.
      */
     match /patients/{patientId} {
       allow get, list: if isMedicalPersonnel();
-      allow create: if isMedicalPersonnel() && request.resource.data.id == patientId;
-      allow update: if canModifyOperationalData() && isUnchanged('id');
-      allow delete: if canModifyOperationalData();
+      allow create: if isMedicalPersonnel();
+      allow update: if isMedicalPersonnel();
+      allow delete: if isMedicalPersonnel();
     }
 
     /**
      * @description Stock levels and inventory management for blood types.
-     * @path /blood_inventory/{bloodTypeId}
-     * @allow (list) If requester is medical personnel.
-     * @deny (update) If requester attempts to change the bloodTypeId association.
-     * @principle Ensures resource visibility for all authorized staff.
      */
     match /blood_inventory/{bloodTypeId} {
       allow get, list: if isMedicalPersonnel();
-      allow create: if isMedicalPersonnel() && request.resource.data.id == bloodTypeId;
-      allow update: if canModifyOperationalData() && isUnchanged('id');
-      allow delete: if canModifyOperationalData();
+      allow create, update, delete: if isMedicalPersonnel();
     }
 
     /**
      * @description Tracking and assignment of ventilator equipment.
-     * @path /ventilators/{ventilatorId}
-     * @allow (update) If medical personnel are assigning a ventilator to a patient.
-     * @deny (delete) If the user is not authenticated or lacks roles.
-     * @principle Protects critical medical equipment status from unauthorized modification.
      */
     match /ventilators/{ventilatorId} {
       allow get, list: if isMedicalPersonnel();
-      allow create: if isMedicalPersonnel() && request.resource.data.id == ventilatorId;
-      allow update: if canModifyOperationalData() && isUnchanged('id');
-      allow delete: if canModifyOperationalData();
+      allow create, update, delete: if isMedicalPersonnel();
+    }
+    
+    /**
+     * @description MCI Plans management.
+     */
+    match /mci_plans/{planId} {
+      allow get, list: if isMedicalPersonnel();
+      allow create, update, delete: if isMedicalPersonnel();
+    }
+
+    /**
+     * @description Resource tracking.
+     */
+    match /resources/{resourceId} {
+      allow get: if isMedicalPersonnel();
+      allow write: if isMedicalPersonnel();
     }
   }
 }

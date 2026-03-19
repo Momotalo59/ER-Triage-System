@@ -66,13 +66,14 @@ function AddPatientContent() {
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
-  // ลิงก์ planId จาก URL เข้ากับ formData ทันทีที่โหลดหน้าจอ
+  // Sync planId from URL to formData immediately
   useEffect(() => {
     if (planIdFromUrl) {
       setFormData(prev => ({ ...prev, planId: planIdFromUrl }));
     }
   }, [planIdFromUrl]);
 
+  // Set default arrival time for new registrations
   useEffect(() => {
     if (!patientId && !formData.arrival) {
       setFormData(prev => ({
@@ -86,6 +87,7 @@ function AddPatientContent() {
     }
   }, [patientId, formData.arrival]);
 
+  // Load existing patient data when editing
   useEffect(() => {
     if (existingPatient) {
       setFormData(existingPatient);
@@ -98,7 +100,7 @@ function AddPatientContent() {
       e.stopPropagation();
     }
     
-    // ดึงค่า planId ล่าสุดเพื่อให้แน่ใจว่าไม่ว่างเปล่า
+    // Explicitly determine the redirection path
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -122,9 +124,9 @@ function AddPatientContent() {
       });
     }
     
-    // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
+    // Navigate back to the correct context after initiation
     if (currentPlanId) {
-      router.replace(`/dashboard?id=${currentPlanId}`);
+      router.push(`/dashboard?id=${currentPlanId}`);
     } else {
       router.back();
     }
@@ -153,7 +155,7 @@ function AddPatientContent() {
                />
             </div>
             <h1 className="text-xl font-bold flex items-center gap-2 text-white">
-              <UserPlus className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่'}
+              <Activity className="h-5 w-5" /> {patientId ? 'แก้ไขข้อมูลผู้ป่วย' : 'ลงทะเบียนผู้ป่วยใหม่'}
             </h1>
           </div>
           <Button 
@@ -168,6 +170,7 @@ function AddPatientContent() {
       <main className="max-w-[1200px] mx-auto p-6 mt-4">
         <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
           <form onSubmit={handleSubmit} className="space-y-10">
+            {/* Basic Info Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <ClipboardList className="h-7 w-7" /> ข้อมูลพื้นฐานและอาการ
@@ -233,6 +236,7 @@ function AddPatientContent() {
               </div>
             </section>
 
+            {/* Vital Signs Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <HeartPulse className="h-7 w-7" /> สัญญาณชีพและข้อมูลทางคลินิก
@@ -299,6 +303,7 @@ function AddPatientContent() {
               </div>
             </section>
 
+            {/* Triage and Treatment Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <Activity className="h-7 w-7" /> การคัดกรองและแผนการรักษา
