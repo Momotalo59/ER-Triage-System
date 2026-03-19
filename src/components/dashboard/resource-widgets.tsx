@@ -22,12 +22,13 @@ interface ResourceWidgetsProps {
   onUpdateResources: (newResources: ResourceSummary) => void;
 }
 
+// ไอคอนเครื่องช่วยหายใจแบบที่ 3 (สไตล์มินิมอลตามรูป)
 const LungsIcon = ({ className }: { className?: string }) => (
   <svg 
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="2" 
+    strokeWidth="2.5" 
     strokeLinecap="round" 
     strokeLinejoin="round" 
     className={className}
@@ -146,7 +147,7 @@ export function ResourceWidgets({ patients, resources, onUpdateResources }: Reso
       <Card id="ventilator-section" className="shadow-sm border border-slate-200 bg-white overflow-hidden">
         <CardHeader className="bg-[#1a5f7a] text-white p-2 px-4 flex-row justify-between items-center gap-2 space-y-0">
           <div className="flex items-center gap-2">
-            <LungsIcon className="h-4 w-4" />
+            <LungsIcon className="h-5 w-5" />
             <CardTitle className="text-sm font-bold">เครื่องช่วยหายใจ</CardTitle>
           </div>
           <button 
