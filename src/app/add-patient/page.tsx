@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -64,12 +64,19 @@ function AddPatientContent() {
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
-  // Sync planId from URL to formData and ensure it stays consistent
+  // Sync planId from URL to formData
   useEffect(() => {
     if (planIdFromUrl) {
       setFormData(prev => ({ ...prev, planId: planIdFromUrl }));
     }
   }, [planIdFromUrl]);
+
+  // Load existing patient data when editing
+  useEffect(() => {
+    if (existingPatient) {
+      setFormData(existingPatient);
+    }
+  }, [existingPatient]);
 
   // Set default arrival time for new registrations
   useEffect(() => {
@@ -85,19 +92,13 @@ function AddPatientContent() {
     }
   }, [patientId, formData.arrival]);
 
-  // Load existing patient data when editing
-  useEffect(() => {
-    if (existingPatient) {
-      setFormData(existingPatient);
-    }
-  }, [existingPatient]);
-
   const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
+    // สำคัญ: ดึง planId ล่าสุดที่มี
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -121,7 +122,7 @@ function AddPatientContent() {
       });
     }
     
-    // ทริกเกอร์การนำทางกลับทันทีหลังจากสั่งบันทึก (Non-blocking)
+    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันที
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {
@@ -179,7 +180,7 @@ function AddPatientContent() {
                     id="name" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="ระบุชื่อหรือรหัสผู้ป่วย"
-                    value={formData.name} 
+                    value={formData.name || ''} 
                     onChange={e => setFormData(p => ({...p, name: e.target.value}))} 
                     required 
                   />
@@ -190,7 +191,7 @@ function AddPatientContent() {
                     id="hn" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="Hospital Number"
-                    value={formData.hn} 
+                    value={formData.hn || ''} 
                     onChange={e => setFormData(p => ({...p, hn: e.target.value}))} 
                   />
                 </div>
@@ -201,13 +202,13 @@ function AddPatientContent() {
                       id="age" 
                       type="number" 
                       className="bg-slate-50 border-slate-200 text-slate-900 h-12"
-                      value={formData.age} 
+                      value={formData.age || 0} 
                       onChange={e => setFormData(p => ({...p, age: parseInt(e.target.value) || 0}))} 
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="gender" className="text-slate-600 font-medium">เพศ</Label>
-                    <Select value={formData.gender} onValueChange={v => setFormData(p => ({...p, gender: v}))}>
+                    <Select value={formData.gender || 'ชาย'} onValueChange={v => setFormData(p => ({...p, gender: v}))}>
                       <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
                         <SelectValue />
                       </SelectTrigger>
@@ -227,7 +228,7 @@ function AddPatientContent() {
                   id="symptoms" 
                   className="bg-slate-50 border-slate-200 text-slate-900 min-h-[100px] text-lg"
                   placeholder="ระบุอาการแรกรับของผู้ป่วย..."
-                  value={formData.symptoms} 
+                  value={formData.symptoms || ''} 
                   onChange={e => setFormData(p => ({...p, symptoms: e.target.value}))}
                 />
               </div>
@@ -243,7 +244,7 @@ function AddPatientContent() {
                   <Label htmlFor="blood" className="text-slate-600 font-medium flex items-center gap-1">
                     <Droplets className="h-4 w-4 text-red-500" /> หมู่เลือด
                   </Label>
-                  <Select value={formData.blood} onValueChange={v => setFormData(p => ({...p, blood: v}))}>
+                  <Select value={formData.blood || 'O'} onValueChange={v => setFormData(p => ({...p, blood: v}))}>
                     <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
                       <SelectValue />
                     </SelectTrigger>
@@ -261,7 +262,7 @@ function AddPatientContent() {
                     id="bp" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
                     placeholder="เช่น 120/80"
-                    value={formData.bloodPressure} 
+                    value={formData.bloodPressure || ''} 
                     onChange={e => setFormData(p => ({...p, bloodPressure: e.target.value}))} 
                   />
                 </div>
@@ -271,7 +272,7 @@ function AddPatientContent() {
                     id="hr" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
                     placeholder="เช่น 80"
-                    value={formData.heartRate} 
+                    value={formData.heartRate || ''} 
                     onChange={e => setFormData(p => ({...p, heartRate: e.target.value}))} 
                   />
                 </div>
@@ -283,7 +284,7 @@ function AddPatientContent() {
                     id="temp" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
                     placeholder="เช่น 36.5"
-                    value={formData.temperature} 
+                    value={formData.temperature || ''} 
                     onChange={e => setFormData(p => ({...p, temperature: e.target.value}))} 
                   />
                 </div>
@@ -293,7 +294,7 @@ function AddPatientContent() {
                     id="o2" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12 font-bold"
                     placeholder="เช่น 98"
-                    value={formData.o2} 
+                    value={formData.o2 || ''} 
                     onChange={e => setFormData(p => ({...p, o2: e.target.value}))} 
                   />
                 </div>
@@ -308,7 +309,7 @@ function AddPatientContent() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="triage" className="text-slate-600 font-medium">ระดับความรุนแรง (Triage Level)</Label>
-                  <Select value={formData.triageLevel} onValueChange={v => setFormData(p => ({...p, triageLevel: v as TriageLevel}))}>
+                  <Select value={formData.triageLevel || 'Minor'} onValueChange={v => setFormData(p => ({...p, triageLevel: v as TriageLevel}))}>
                     <SelectTrigger className={`border-none font-bold h-12 ${
                       formData.triageLevel === 'Critical' ? 'bg-[#e63946] text-white' :
                       formData.triageLevel === 'Urgent' ? 'bg-[#ffb703] text-black' :
@@ -326,7 +327,7 @@ function AddPatientContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status" className="text-slate-600 font-medium">สถานะปัจจุบัน</Label>
-                  <Select value={formData.status} onValueChange={v => setFormData(p => ({...p, status: v as PatientStatus}))}>
+                  <Select value={formData.status || 'Waiting'} onValueChange={v => setFormData(p => ({...p, status: v as PatientStatus}))}>
                     <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 h-12">
                       <SelectValue />
                     </SelectTrigger>
@@ -346,7 +347,7 @@ function AddPatientContent() {
                     id="scene" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12"
                     placeholder="เช่น แดง 1, กู้ชีพ..."
-                    value={formData.scene} 
+                    value={formData.scene || ''} 
                     onChange={e => setFormData(p => ({...p, scene: e.target.value}))} 
                   />
                 </div>
@@ -358,7 +359,7 @@ function AddPatientContent() {
                   <Input 
                     id="diagnosis" 
                     className="bg-slate-50 border-slate-200 text-slate-900 h-12"
-                    value={formData.diagnosis} 
+                    value={formData.diagnosis || ''} 
                     onChange={e => setFormData(p => ({...p, diagnosis: e.target.value}))} 
                   />
                 </div>
@@ -371,7 +372,7 @@ function AddPatientContent() {
                     <Input 
                       id="destination" 
                       className="bg-slate-50 border-slate-200 text-slate-900 h-12 flex-1"
-                      value={formData.destination} 
+                      value={formData.destination || ''} 
                       onChange={e => setFormData(p => ({...p, destination: e.target.value}))} 
                     />
                   </div>
@@ -386,7 +387,7 @@ function AddPatientContent() {
                   id="note" 
                   className="bg-slate-50 border-slate-200 text-slate-900 min-h-[80px]"
                   placeholder="ข้อมูลเพิ่มเติมอื่นๆ..."
-                  value={formData.note} 
+                  value={formData.note || ''} 
                   onChange={e => setFormData(p => ({...p, note: e.target.value}))}
                 />
               </div>
@@ -394,8 +395,7 @@ function AddPatientContent() {
 
             <div className="pt-8 flex gap-4">
               <Button 
-                type="button" 
-                onClick={() => handleSubmit()}
+                type="submit" 
                 className="flex-1 bg-[#b22222] hover:bg-[#8b1a1a] h-14 text-xl font-bold rounded-xl shadow-lg"
               >
                 {patientId ? 'ยืนยันการแก้ไข' : 'ยืนยันการลงทะเบียน'}
