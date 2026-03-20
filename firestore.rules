@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * CRISIS TRIAGE DASHBOARD SECURITY RULES (PROTOTYPE MODE)
-     * อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดเพื่อความรวดเร็วในการพัฒนาและแก้ปัญหา Permission
+     * อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดเพื่อให้แอปพลิเคชันทำงานได้สมบูรณ์ในช่วงการพัฒนา
      */
     match /{document=**} {
       allow read, write: if true;

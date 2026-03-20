@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useCallback } from 'react';
@@ -99,7 +98,6 @@ function AddPatientContent() {
       e.stopPropagation();
     }
     
-    // Explicitly determine the redirection path
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -123,9 +121,9 @@ function AddPatientContent() {
       });
     }
     
-    // IMPORTANT: Forced navigation back to dashboard to solve "stuck" issue
+    // ทริกเกอร์การนำทางกลับทันทีหลังจากสั่งบันทึก (Non-blocking)
     if (currentPlanId) {
-      router.replace(`/dashboard?id=${currentPlanId}`);
+      router.push(`/dashboard?id=${currentPlanId}`);
     } else {
       router.back();
     }
