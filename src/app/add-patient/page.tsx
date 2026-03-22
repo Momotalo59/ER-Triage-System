@@ -103,7 +103,6 @@ function AddPatientContent() {
       edTriage: formData.triageLevel,
     };
 
-    // บันทึกข้อมูลแบบ Non-blocking
     if (patientId) {
       updateDocumentNonBlocking(doc(firestore, 'patients', patientId), dataToSave);
       toast({
@@ -118,7 +117,6 @@ function AddPatientContent() {
       });
     }
     
-    // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {
