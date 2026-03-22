@@ -122,13 +122,12 @@ function AddPatientContent() {
     }
     
     // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
-    setTimeout(() => {
-      if (currentPlanId) {
-        router.push(`/dashboard?id=${currentPlanId}`);
-      } else {
-        router.back();
-      }
-    }, 100);
+    // ใช้ router.push พร้อม Query Params เพื่อความแม่นยำ
+    if (currentPlanId) {
+      router.push(`/dashboard?id=${currentPlanId}`);
+    } else {
+      router.back();
+    }
   };
 
   return (

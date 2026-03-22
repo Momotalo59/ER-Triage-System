@@ -36,7 +36,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, deleteDocumentNonBlocking, useDoc, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase";
 import { collection, query, doc, where } from "firebase/firestore";
 
-// ส่วนประกอบนาฬิกาแยกอิสระเพื่อลด Re-render
 const RealTimeClock = React.memo(function RealTimeClock() {
   const [time, setTime] = useState("");
   useEffect(() => {
@@ -76,14 +75,12 @@ function DashboardContent() {
   const { toast } = useToast();
   const firestore = useFirestore();
   
-  // Memoize refs and queries for stability
   const planDocRef = useMemoFirebase(() => planId ? doc(firestore, 'mci_plans', planId) : null, [planId, firestore]);
   const { data: planData } = useDoc<MCIPlan>(planDocRef);
 
   const resourceDocRef = useMemoFirebase(() => doc(firestore, 'resources', 'current'), [firestore]);
   const { data: resources } = useDoc<ResourceSummary>(resourceDocRef);
 
-  // Stats calculation
   const patientsRef = collection(firestore, 'patients');
   const memoizedQuery = useMemoFirebase(() => planId ? query(patientsRef, where('planId', '==', planId)) : query(patientsRef), [planId, firestore]);
   const { data: patientsData, isLoading: isPatientsLoading } = useCollection<Patient>(memoizedQuery);
@@ -93,13 +90,11 @@ function DashboardContent() {
     return [...patientsData].sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
   }, [patientsData]);
 
-  // Dialog states
   const [activeDialog, setActiveDialog] = useState<'plan' | 'blood' | 'vent' | null>(null);
   const [tempPlan, setTempPlan] = useState({ title: '', location: '' });
   const [tempVents, setTempVents] = useState<VentilatorDept[]>([]);
   const [tempBlood, setTempBlood] = useState<any>({});
 
-  // Sync state when dialogs open
   useEffect(() => {
     if (activeDialog === 'plan' && planData) setTempPlan({ title: planData.title, location: planData.location });
     if (activeDialog === 'blood' && resources) setTempBlood(resources.bloodInventory || {});
@@ -187,7 +182,7 @@ function DashboardContent() {
         <ResourceWidgets patients={patients} onEditBlood={() => setActiveDialog('blood')} onEditVent={() => setActiveDialog('vent')} />
       </main>
 
-      {/* Edit Plan Dialog */}
+      {/* Popups (Dialogs) */}
       <Dialog open={activeDialog === 'plan'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold"><Edit className="h-5 w-5" /> แก้ไขเหตุการณ์</DialogTitle></DialogHeader>
@@ -199,7 +194,6 @@ function DashboardContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Blood Stock Dialog */}
       <Dialog open={activeDialog === 'blood'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[400px] bg-white text-slate-900">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] text-xl font-bold"><Droplets className="h-6 w-6" /> สต็อกหมู่เลือด</DialogTitle></DialogHeader>
@@ -215,7 +209,6 @@ function DashboardContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Ventilator Dialog */}
       <Dialog open={activeDialog === 'vent'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[550px] bg-white text-slate-900 max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#1a5f7a] text-xl font-bold"><LungsImageIcon className="h-6 w-6" /> เครื่องช่วยหายใจ</DialogTitle></DialogHeader>
@@ -243,10 +236,7 @@ export default function CrisisTriageDashboard() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center font-sarabun">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
-          <p className="text-slate-500 font-medium">กำลังเตรียมข้อมูล Dashboard...</p>
-        </div>
+        <Loader2 className="h-10 w-10 animate-spin text-[#b22222]" />
       </div>
     }>
       <DashboardContent />
