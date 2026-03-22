@@ -98,7 +98,6 @@ function AddPatientContent() {
       e.stopPropagation();
     }
     
-    // สำคัญ: ดึง planId ล่าสุดที่มี
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -122,12 +121,14 @@ function AddPatientContent() {
       });
     }
     
-    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันที
-    if (currentPlanId) {
-      router.push(`/dashboard?id=${currentPlanId}`);
-    } else {
-      router.back();
-    }
+    // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
+    setTimeout(() => {
+      if (currentPlanId) {
+        router.push(`/dashboard?id=${currentPlanId}`);
+      } else {
+        router.back();
+      }
+    }, 100);
   };
 
   return (
