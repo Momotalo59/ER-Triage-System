@@ -65,21 +65,18 @@ function AddPatientContent() {
   const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
-  // Sync planId from URL to formData
   useEffect(() => {
     if (planIdFromUrl) {
       setFormData(prev => ({ ...prev, planId: planIdFromUrl }));
     }
   }, [planIdFromUrl]);
 
-  // Load existing patient data when editing
   useEffect(() => {
     if (existingPatient) {
       setFormData(existingPatient);
     }
   }, [existingPatient]);
 
-  // Set default arrival time for new registrations
   useEffect(() => {
     if (!patientId && !formData.arrival) {
       setFormData(prev => ({
@@ -98,7 +95,6 @@ function AddPatientContent() {
       e.preventDefault();
     }
     
-    // สำคัญ: ดึงค่า planId ที่แม่นยำที่สุด
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -122,8 +118,7 @@ function AddPatientContent() {
       });
     }
     
-    // การนำทางกลับไปยัง Dashboard (รูปที่ 2) ทันที
-    // ใช้ router.push พร้อม Query Params เพื่อความแม่นยำสูงสุด
+    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันที
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {
@@ -169,7 +164,6 @@ function AddPatientContent() {
       <main className="max-w-[1200px] mx-auto p-6 mt-4">
         <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
           <form onSubmit={handleSubmit} className="space-y-10">
-            {/* Basic Info Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <ClipboardList className="h-7 w-7" /> ข้อมูลพื้นฐานและอาการ
@@ -235,7 +229,6 @@ function AddPatientContent() {
               </div>
             </section>
 
-            {/* Vital Signs Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <HeartPulse className="h-7 w-7" /> สัญญาณชีพและข้อมูลทางคลินิก
@@ -302,7 +295,6 @@ function AddPatientContent() {
               </div>
             </section>
 
-            {/* Triage and Treatment Section */}
             <section className="space-y-6">
               <h2 className="text-[#e63946] font-bold flex items-center gap-2 text-2xl border-b border-slate-200 pb-3">
                 <Activity className="h-7 w-7" /> การคัดกรองและแผนการรักษา
