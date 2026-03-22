@@ -12,8 +12,7 @@ import {
   Droplets,
   HeartPulse,
   MessageSquare,
-  Loader2,
-  Check
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,6 +94,7 @@ function AddPatientContent() {
       e.preventDefault();
     }
     
+    // ดึงค่า planId ที่แม่นยำที่สุด
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -118,7 +118,7 @@ function AddPatientContent() {
       });
     }
     
-    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันที
+    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันทีหลังจากสั่งบันทึก
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {

@@ -18,8 +18,7 @@ import {
   XCircle,
   PlusCircle,
   Trash2,
-  Loader2,
-  Check
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -147,12 +146,12 @@ function DashboardContent() {
               <Edit className="h-3.5 w-3.5" /> แก้ไขชื่อแผน
             </Button>
             <Button asChild variant="secondary" size="sm" className="bg-black/20 hover:bg-black/40 text-white border-none gap-1.5 h-8 text-[11px]">
-              <Link href={`/relative-board?id=${planId}`} prefetch={true}>
+              <Link href={`/relative-board?id=${planId}`}>
                 <Monitor className="h-3.5 w-3.5" /> บอร์ดญาติ
               </Link>
             </Button>
             <Button asChild size="sm" className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold gap-1.5 h-8 text-[11px]">
-              <Link href={`/add-patient?planId=${planId}`} prefetch={true}>
+              <Link href={`/add-patient?planId=${planId}`}>
                 <Plus className="h-3.5 w-3.5" /> เพิ่มผู้ป่วย
               </Link>
             </Button>

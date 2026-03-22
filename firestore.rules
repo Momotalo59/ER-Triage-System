@@ -1,10 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    /**
-     * CRISIS TRIAGE DASHBOARD SECURITY RULES (PROTOTYPE MODE)
-     * อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดเพื่อให้แอปพลิเคชันทำงานได้สมบูรณ์ในช่วงการพัฒนา
-     */
     match /{document=**} {
       allow read, write: if true;
     }
