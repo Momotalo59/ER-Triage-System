@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
       // อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดในช่วงการพัฒนาต้นแบบ (Prototype)
-      // เพื่อป้องกันข้อผิดพลาด Missing or insufficient permissions
+      // เพื่อป้องกันข้อผิดพลาด Missing or insufficient permissions ที่ทำให้ระบบหยุดทำงาน
       allow read, write: if true;
     }
   }

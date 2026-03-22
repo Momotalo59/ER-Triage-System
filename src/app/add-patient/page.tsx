@@ -117,7 +117,7 @@ function AddPatientContent() {
       });
     }
     
-    // สำคัญ: ทำการ Redirect ทันทีไปยังหน้า Dashboard
+    // การ Redirect ทันทีไปยังหน้า Dashboard เพื่อความลื่นไหล
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {

@@ -3,8 +3,12 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
+/**
+ * ไฟล์นี้ทำหน้าที่เป็นโครงสร้างหลักของ HTML (เทียบเท่า index.html)
+ * จัดการส่วนของ <head>, <body> และการดึงฟอนต์มาใช้งาน
+ */
 export const metadata: Metadata = {
-  title: 'ระบบบริหารจัดการจุดคัดกรองวิกฤต',
+  title: 'ระบบบริหารจัดการจุดคัดกรองวิกฤต - Overbrook Hospital',
   description: 'ระบบตอบโต้ภาวะฉุกเฉินและติดตามอาการผู้ป่วยแบบเรียลไทม์',
 };
 
