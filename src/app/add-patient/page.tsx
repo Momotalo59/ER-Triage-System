@@ -12,7 +12,8 @@ import {
   Droplets,
   HeartPulse,
   MessageSquare,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,12 +93,12 @@ function AddPatientContent() {
     }
   }, [patientId, formData.arrival]);
 
-  const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+  const handleSubmit = (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
-      e.stopPropagation();
     }
     
+    // สำคัญ: ดึงค่า planId ที่แม่นยำที่สุด
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -121,8 +122,8 @@ function AddPatientContent() {
       });
     }
     
-    // เปลี่ยนหน้ากลับไปยัง Dashboard ทันที
-    // ใช้ router.push พร้อม Query Params เพื่อความแม่นยำ
+    // การนำทางกลับไปยัง Dashboard (รูปที่ 2) ทันที
+    // ใช้ router.push พร้อม Query Params เพื่อความแม่นยำสูงสุด
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {
@@ -158,7 +159,7 @@ function AddPatientContent() {
           </div>
           <Button 
             className="bg-white text-[#b22222] hover:bg-slate-100 font-bold gap-2 rounded-lg h-9"
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
           >
             <Save className="h-4 w-4" /> บันทึกข้อมูล
           </Button>
