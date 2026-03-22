@@ -94,7 +94,6 @@ function AddPatientContent() {
       e.preventDefault();
     }
     
-    // ดึงค่า planId ที่แม่นยำที่สุด
     const currentPlanId = planIdFromUrl || formData.planId || "";
     
     const dataToSave = {
@@ -118,7 +117,6 @@ function AddPatientContent() {
       });
     }
     
-    // บังคับเปลี่ยนหน้ากลับไปยัง Dashboard ทันทีหลังจากสั่งบันทึก
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {

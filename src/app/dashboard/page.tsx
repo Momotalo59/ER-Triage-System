@@ -181,7 +181,6 @@ function DashboardContent() {
         <ResourceWidgets patients={patients} onEditBlood={() => setActiveDialog('blood')} onEditVent={() => setActiveDialog('vent')} />
       </main>
 
-      {/* Popups (Dialogs) */}
       <Dialog open={activeDialog === 'plan'} onOpenChange={(open) => !open && setActiveDialog(null)}>
         <DialogContent className="sm:max-w-[425px] bg-white text-slate-900 border-slate-200">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-[#b22222] font-bold"><Edit className="h-5 w-5" /> แก้ไขเหตุการณ์</DialogTitle></DialogHeader>
