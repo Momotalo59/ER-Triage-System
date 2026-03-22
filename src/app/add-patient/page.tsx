@@ -117,11 +117,11 @@ function AddPatientContent() {
       });
     }
     
-    // สำคัญ: ทำการ Redirect ทันทีหลังจากส่งคำสั่งบันทึก
+    // สำคัญ: ทำการ Redirect ทันทีไปยังหน้า Dashboard
     if (currentPlanId) {
-      router.replace(`/dashboard?id=${currentPlanId}`);
+      router.push(`/dashboard?id=${currentPlanId}`);
     } else {
-      router.replace('/');
+      router.push('/');
     }
   };
 
