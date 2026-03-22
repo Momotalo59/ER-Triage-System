@@ -28,7 +28,7 @@ import {
 import { Patient, TriageLevel, PatientStatus } from "@/lib/types";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, addDocumentNonBlocking, updateDocumentNonBlocking, useDoc } from "@/firebase";
+import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useDoc } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
 function AddPatientContent() {
@@ -117,10 +117,11 @@ function AddPatientContent() {
       });
     }
     
+    // สำคัญ: ทำการ Redirect ทันทีหลังจากส่งคำสั่งบันทึก
     if (currentPlanId) {
-      router.push(`/dashboard?id=${currentPlanId}`);
+      router.replace(`/dashboard?id=${currentPlanId}`);
     } else {
-      router.push('/');
+      router.replace('/');
     }
   };
 
