@@ -4,6 +4,7 @@ service cloud.firestore {
     match /{document=**} {
       // อนุญาตให้เข้าถึงข้อมูลได้ทั้งหมดในช่วงการพัฒนาต้นแบบ (Prototype)
       // เพื่อป้องกันข้อผิดพลาด Missing or insufficient permissions ที่ทำให้ระบบหยุดทำงาน
+      // และช่วยให้การนำทาง (Redirect) หลังการบันทึกข้อมูลทำงานได้อย่างลื่นไหล
       allow read, write: if true;
     }
   }
