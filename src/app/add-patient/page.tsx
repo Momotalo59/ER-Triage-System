@@ -117,15 +117,12 @@ function AddPatientContent() {
       });
     }
     
-    // การ Redirect ทันทีไปยังหน้า Dashboard เพื่อความลื่นไหล
-    // การใช้ setTimeout เล็กน้อยเพื่อให้แน่ใจว่าการบันทึกถูกส่งออกไปแล้ว
-    setTimeout(() => {
-      if (currentPlanId) {
-        router.push(`/dashboard?id=${currentPlanId}`);
-      } else {
-        router.push('/');
-      }
-    }, 100);
+    // บังคับเปลี่ยนหน้ากลับทันทีหลังบันทึก เพื่อความรวดเร็วและป้องกันเครื่องค้าง
+    if (currentPlanId) {
+      router.push(`/dashboard?id=${currentPlanId}`);
+    } else {
+      router.push('/');
+    }
   };
 
   return (

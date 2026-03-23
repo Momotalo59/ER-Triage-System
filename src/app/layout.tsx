@@ -4,8 +4,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
 /**
- * ไฟล์นี้ทำหน้าที่เป็นโครงสร้างหลักของ HTML (เทียบเท่า index.html)
- * จัดการส่วนของ <head>, <body> และการดึงฟอนต์มาใช้งาน
+ * ไฟล์นี้ทำหน้าที่เป็น Root Layout ซึ่งเทียบเท่ากับ index.html และ entry point หลัก
+ * จัดการส่วนของ <html>, <body> และ Providers ทั้งหมด
  */
 export const metadata: Metadata = {
   title: 'ระบบบริหารจัดการจุดคัดกรองวิกฤต - Overbrook Hospital',
@@ -22,9 +22,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Sarabun:wght@100;400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@100;400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-sarabun antialiased">
         <FirebaseClientProvider>
           {children}
           <Toaster />
