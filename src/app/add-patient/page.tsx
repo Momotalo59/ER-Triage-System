@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -28,7 +29,7 @@ import {
 import { Patient, TriageLevel, PatientStatus } from "@/lib/types";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useDoc } from "@/firebase";
+import { useFirestore, updateDocumentNonBlocking, addDocumentNonBlocking, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
 function AddPatientContent() {
@@ -61,7 +62,8 @@ function AddPatientContent() {
     planId: planIdFromUrl || "",
   });
 
-  const patientDocRef = patientId ? doc(firestore, 'patients', patientId) : null;
+  // ใช้ useMemoFirebase เพื่อความเสถียรของ Document Reference
+  const patientDocRef = useMemoFirebase(() => patientId ? doc(firestore, 'patients', patientId) : null, [patientId, firestore]);
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ function AddPatientContent() {
       });
     }
     
-    // บังคับเปลี่ยนหน้ากลับทันทีหลังบันทึก เพื่อความรวดเร็วและป้องกันเครื่องค้าง
+    // ย้ายหน้ากลับทันทีหลังบันทึก
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {

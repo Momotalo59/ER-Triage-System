@@ -1,11 +1,11 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 
 /**
- * ไฟล์นี้ทำหน้าที่เป็น Root Layout ซึ่งเทียบเท่ากับ index.html และ entry point หลัก
- * จัดการส่วนของ <html>, <body> และ Providers ทั้งหมด
+ * Root Layout (Equivalent to index.html and main.jsx structure)
  */
 export const metadata: Metadata = {
   title: 'ระบบบริหารจัดการจุดคัดกรองวิกฤต - Overbrook Hospital',
