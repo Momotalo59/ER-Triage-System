@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -62,7 +61,6 @@ function AddPatientContent() {
     planId: planIdFromUrl || "",
   });
 
-  // ใช้ useMemoFirebase เพื่อความเสถียรของ Document Reference
   const patientDocRef = useMemoFirebase(() => patientId ? doc(firestore, 'patients', patientId) : null, [patientId, firestore]);
   const { data: existingPatient } = useDoc<Patient>(patientDocRef);
 
@@ -119,12 +117,14 @@ function AddPatientContent() {
       });
     }
     
-    // ย้ายหน้ากลับทันทีหลังบันทึก
-    if (currentPlanId) {
-      router.push(`/dashboard?id=${currentPlanId}`);
-    } else {
-      router.push('/');
-    }
+    // Redirect กลับหน้า Dashboard ทันที
+    setTimeout(() => {
+      if (currentPlanId) {
+        router.push(`/dashboard?id=${currentPlanId}`);
+      } else {
+        router.push('/');
+      }
+    }, 500);
   };
 
   return (
