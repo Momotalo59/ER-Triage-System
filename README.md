@@ -11,19 +11,20 @@ URL: https://github.com/Momotalo59/ER-Triage-System
 - **AI Triage Suggestion**: ระบบแนะนำระดับการคัดกรองเบื้องต้นด้วย AI
 - **Resource Management**: จัดการสต็อกหมู่เลือดและเครื่องช่วยหายใจ
 
-## การนำไปใช้งาน (Deployment)
+## ขั้นตอนการนำไปใช้งาน (Deployment)
 โปรเจกต์นี้รองรับการใช้งานบน **Firebase App Hosting**
 1. นำโค้ดขึ้น GitHub Repository: `https://github.com/Momotalo59/ER-Triage-System`
 2. ไปที่ [Firebase Console](https://console.firebase.google.com/)
-3. เลือกเมนู **App Hosting** และเชื่อมต่อกับ GitHub Repository ของคุณ
-4. ระบบจะทำการ Deploy อัตโนมัติเมื่อมีการ Push โค้ดลง Branch `main`
+3. เลือกเมนู **App Hosting** และกด "Get Started"
+4. เชื่อมต่อกับ GitHub และเลือก Repository `ER-Triage-System`
+5. ระบบจะทำการ Build และ Deploy อัตโนมัติเมื่อมีการ Push โค้ดลง Branch `main`
 
-## คำสั่งสำหรับ Git (Terminal)
+## การอัปเดตโค้ดผ่าน Terminal (บนคอมพิวเตอร์ของคุณ)
 ```bash
 git init
 git remote add origin https://github.com/Momotalo59/ER-Triage-System.git
 git add .
-git commit -m "Deploy: Ready for Firebase App Hosting"
+git commit -m "Production: Ready for Firebase App Hosting"
 git push -u origin main
 ```
 
