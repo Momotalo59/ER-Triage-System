@@ -117,14 +117,12 @@ function AddPatientContent() {
       });
     }
     
-    // Redirect กลับหน้า Dashboard ทันที
-    setTimeout(() => {
-      if (currentPlanId) {
-        router.push(`/dashboard?id=${currentPlanId}`);
-      } else {
-        router.push('/');
-      }
-    }, 500);
+    // Redirect กลับหน้า Dashboard ทันทีโดยไม่รอ Promise เพื่อความเร็ว
+    if (currentPlanId) {
+      router.push(`/dashboard?id=${currentPlanId}`);
+    } else {
+      router.push('/');
+    }
   };
 
   return (
