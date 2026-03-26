@@ -18,5 +18,14 @@ URL: https://github.com/Momotalo59/ER-Triage-System
 3. เลือกเมนู **App Hosting** และเชื่อมต่อกับ GitHub Repository ของคุณ
 4. ระบบจะทำการ Deploy อัตโนมัติเมื่อมีการ Push โค้ดลง Branch `main`
 
+## คำสั่งสำหรับ Git (Terminal)
+```bash
+git init
+git remote add origin https://github.com/Momotalo59/ER-Triage-System.git
+git add .
+git commit -m "Deploy: Ready for Firebase App Hosting"
+git push -u origin main
+```
+
 ## ผู้พัฒนา
 โรงพยาบาลโอเวอร์บรุ๊ค เชียงราย
