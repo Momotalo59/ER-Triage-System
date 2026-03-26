@@ -117,7 +117,7 @@ function AddPatientContent() {
       });
     }
     
-    // Redirect กลับหน้า Dashboard ทันทีโดยไม่รอ Promise เพื่อความเร็ว
+    // Redirect กลับหน้า Dashboard ทันทีหลังจากบันทึก
     if (currentPlanId) {
       router.push(`/dashboard?id=${currentPlanId}`);
     } else {
